@@ -4,11 +4,11 @@ const { isDuplicateQuestion } = require('../utils/duplicateChecker');
 // Load API Key directly from process.env.GEMINI_API_KEY
 const getApiKey = () => process.env.GEMINI_API_KEY || '';
 
-// Priority model list - Using latest Gemini 2.5 Flash model for sub-3-second responses
+// Priority model list - Using latest Gemini Flash models for sub-3-second responses
 const GEMINI_MODELS = [
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-1.5-flash'
+  'gemini-1.5-flash',
+  'gemini-2.0-flash-lite'
 ];
 
 /**
@@ -222,23 +222,23 @@ Return ONLY valid JSON matching this exact structure:
  * Domain-Aware Fast Fallback Generator
  */
 function generateRichDomainFallbackQuestions({ count, subjectName, topicName, chapterName, difficulty, exam, grade, excludeTexts = [] }) {
-  const scope = topicName || chapterName || subjectName;
-  const lowerSub = subjectName.toLowerCase();
-  const lowerScope = scope.toLowerCase();
+  const scope = topicName || chapterName || subjectName || 'Core Concept';
+  const lowerSub = (subjectName || '').toLowerCase();
+  const lowerScope = (scope || '').toLowerCase();
 
   let subConceptPool = [];
 
-  if (lowerSub.includes('physic') || lowerScope.includes('electrostatic') || lowerScope.includes('gauss') || lowerScope.includes('magnetic') || lowerScope.includes('optic')) {
+  if (lowerSub.includes('physic') || lowerScope.includes('electrostatic') || lowerScope.includes('gauss') || lowerScope.includes('magnetic') || lowerScope.includes('optic') || lowerScope.includes('force')) {
     subConceptPool = [
       {
-        concept: "Electric Flux & Surface Integration",
+        concept: "Electric Flux & Field Integration",
         format: "Numerical",
         subtopic: "Gauss's Law Applications",
-        getQuestion: () => `A spherical surface of radius R = ${Math.floor(Math.random() * 5) + 2} cm encloses a point charge q = ${Math.floor(Math.random() * 8) + 2} μC at its center. What is the net electric flux passing through the spherical surface? (Permittivity ε₀ = 8.85 × 10⁻¹² F/m)`,
-        getOptions: () => [
-          `${((Math.floor(Math.random() * 8) + 2) * 1.13).toFixed(2)} × 10⁵ N·m²/C`,
-          `${((Math.floor(Math.random() * 8) + 2) * 2.26).toFixed(2)} × 10⁵ N·m²/C`,
-          `${((Math.floor(Math.random() * 8) + 2) * 0.56).toFixed(2)} × 10⁵ N·m²/C`,
+        getQuestion: (idx) => `Question ${idx}: A spherical surface of radius R = ${idx + 2} cm encloses a point charge q = ${idx + 3} μC at its center. What is the net electric flux passing through the spherical surface? (Permittivity ε₀ = 8.85 × 10⁻¹² F/m)`,
+        getOptions: (idx) => [
+          `${((idx + 3) * 1.13).toFixed(2)} × 10⁵ N·m²/C`,
+          `${((idx + 3) * 2.26).toFixed(2)} × 10⁵ N·m²/C`,
+          `${((idx + 3) * 0.56).toFixed(2)} × 10⁵ N·m²/C`,
           `Zero N·m²/C`
         ],
         explanation: "By Gauss's Law, net electric flux Φ = q_enclosed / ε₀. Substituting q and ε₀ yields Φ = q / (8.85 × 10⁻¹²)."
@@ -247,7 +247,7 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
         concept: "Gaussian Surface Selection & Symmetry",
         format: "Assertion Reason",
         subtopic: "Symmetry Conditions",
-        getQuestion: () => `Assertion (A): Gauss's Law is valid for any closed surface of arbitrary shape in ${scope}.\nReason (R): The electric flux through a closed surface depends strictly on the net enclosed charge, independent of the shape or size of the surface.`,
+        getQuestion: (idx) => `Question ${idx}: Assertion (A): Gauss's Law is valid for any closed surface of arbitrary shape in ${scope}.\nReason (R): The electric flux through a closed surface depends strictly on the net enclosed charge, independent of the shape or size of the surface.`,
         getOptions: () => [
           "Both (A) and (R) are true and (R) is the correct explanation of (A).",
           "Both (A) and (R) are true but (R) is NOT the correct explanation of (A).",
@@ -255,6 +255,77 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
           "(A) is false but (R) is true."
         ],
         explanation: "Gauss's Law holds for any closed Gaussian surface regardless of geometry."
+      },
+      {
+        concept: "Electric Potential & Field Gradient",
+        format: "Conceptual",
+        subtopic: "Potential Difference",
+        getQuestion: (idx) => `Question ${idx}: In a uniform electric field of magnitude E = ${(idx + 1) * 100} V/m directed along the x-axis, what is the potential difference V_B - V_A between point A(0,0) and point B(${(idx + 2)},0)?`,
+        getOptions: (idx) => [
+          `-${(idx + 1) * 100 * (idx + 2)} V`,
+          `+${(idx + 1) * 100 * (idx + 2)} V`,
+          `Zero V`,
+          `-${(idx + 1) * 50} V`
+        ],
+        explanation: "Potential difference V_B - V_A = -E * dx along the field direction."
+      }
+    ];
+  } else if (lowerSub.includes('chem') || lowerScope.includes('organic') || lowerScope.includes('reaction') || lowerScope.includes('acid') || lowerScope.includes('bonding')) {
+    subConceptPool = [
+      {
+        concept: "Reaction Kinetics & Rate Law",
+        format: "Conceptual",
+        subtopic: "Reaction Order",
+        getQuestion: (idx) => `Question ${idx}: For a reaction A + B → Products in ${scope}, doubling the concentration of A increases rate by 4x, while doubling B doubles the rate. What is the overall reaction order?`,
+        getOptions: () => [
+          "3 (Second order in A, First order in B)",
+          "2 (First order in A, First order in B)",
+          "4 (Second order in A, Second order in B)",
+          "1 (First order overall)"
+        ],
+        explanation: "Rate = k[A]^2[B]^1. Overall order = 2 + 1 = 3."
+      },
+      {
+        concept: "Chemical Equilibrium & Le Chatelier Principle",
+        format: "Numerical",
+        subtopic: "Equilibrium Constant",
+        getQuestion: (idx) => `Question ${idx}: In the equilibrium system N₂(g) + 3H₂(g) ⇌ 2NH₃(g) + ΔH, which shift occurs if pressure is increased by a factor of ${(idx + 2)}?`,
+        getOptions: () => [
+          "Shift forward toward fewer gas moles (NH₃ formation)",
+          "Shift backward toward more gas moles (N₂ and H₂ formation)",
+          "No shift in equilibrium position",
+          "Equilibrium constant Kp increases exponentially"
+        ],
+        explanation: "Increasing pressure shifts equilibrium toward the side with fewer moles of gas."
+      }
+    ];
+  } else if (lowerSub.includes('math') || lowerScope.includes('calculus') || lowerScope.includes('integral') || lowerScope.includes('algebra') || lowerScope.includes('vector')) {
+    subConceptPool = [
+      {
+        concept: "Integration & Calculus Fundamentals",
+        format: "Numerical",
+        subtopic: "Definite Integration",
+        getQuestion: (idx) => `Question ${idx}: Evaluate the definite integral ∫ from 0 to 1 of (${idx + 2}x + 3) dx.`,
+        getOptions: (idx) => [
+          `${(idx + 2) / 2 + 3}`,
+          `${(idx + 2) + 3}`,
+          `${(idx + 2) / 2}`,
+          `${(idx + 2) * 2}`
+        ],
+        explanation: "∫(ax + 3) dx = a*x^2/2 + 3x evaluated from 0 to 1 equals a/2 + 3."
+      },
+      {
+        concept: "Differential Equations & Growth Rates",
+        format: "Conceptual",
+        subtopic: "First Order Differential Equations",
+        getQuestion: (idx) => `Question ${idx}: What is the general solution to the differential equation dy/dx = ${(idx + 1)}y?`,
+        getOptions: (idx) => [
+          `y = C * e^(${(idx + 1)}x)`,
+          `y = C * x^(${(idx + 1)})`,
+          `y = ${(idx + 1)}x + C`,
+          `y = C * ln(${(idx + 1)}x)`
+        ],
+        explanation: "Separating variables gives ∫(1/y)dy = ∫k dx, yielding y = C * e^(kx)."
       }
     ];
   } else {
@@ -263,7 +334,7 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
         concept: "Core Governing Principles",
         format: "Conceptual",
         subtopic: "Foundations",
-        getQuestion: () => `Which statement accurately formulates the fundamental principle governing ${scope} under standard conditions?`,
+        getQuestion: (idx) => `Question ${idx}: Which statement accurately formulates the fundamental principle governing ${scope} under standard analytical conditions?`,
         getOptions: () => [
           `Primary state variables maintain direct proportionality across defined boundary conditions in ${scope}.`,
           `External forces completely invalidate the conservation principles of ${scope}.`,
@@ -271,6 +342,19 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
           `Parameters scale exponentially regardless of initial structural constraints.`
         ],
         explanation: `In ${scope}, core principles dictate direct proportionality and conservation under defined boundary conditions.`
+      },
+      {
+        concept: "Analytical Methods & Problem Solving",
+        format: "Application",
+        subtopic: "Methodology",
+        getQuestion: (idx) => `Question ${idx}: In evaluating complex scenarios within ${scope}, which approach yields optimal accuracy?`,
+        getOptions: () => [
+          `Decomposing the problem into foundational sub-components and verifying boundary conditions.`,
+          `Ignoring variable constraints and assuming linear extrapolation.`,
+          `Relying solely on empirical heuristics without theoretical validation.`,
+          `Disregarding initial conditions when calculating steady-state variables.`
+        ],
+        explanation: `Decomposing complex problems into foundational components ensures rigorous boundary verification in ${scope}.`
       }
     ];
   }
@@ -279,8 +363,8 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
 
   for (let i = 0; i < count; i++) {
     const item = subConceptPool[i % subConceptPool.length];
-    const qText = item.getQuestion();
-    const opts = item.getOptions();
+    const qText = item.getQuestion(i + 1);
+    const opts = item.getOptions ? item.getOptions(i + 1) : item.getOptions();
 
     const qObj = {
       id: i + 1,
@@ -290,15 +374,15 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
       correctAnswer: opts[0],
       correctOptionIndex: 0,
       explanation: item.explanation,
-      subject: subjectName,
-      class: grade,
-      grade: grade,
-      exam: exam,
-      examType: exam,
-      chapter: chapterName || subjectName,
-      topic: topicName || scope,
+      subject: subjectName || 'General',
+      class: grade || 'Class 12',
+      grade: grade || 'Class 12',
+      exam: exam || 'JEE Main',
+      examType: exam || 'JEE Main',
+      chapter: chapterName || subjectName || 'Core Chapter',
+      topic: topicName || scope || 'Core Topic',
       subtopic: item.subtopic,
-      difficulty: difficulty === 'Mixed' ? 'Medium' : difficulty,
+      difficulty: difficulty === 'Mixed' ? (i % 2 === 0 ? 'Medium' : 'Hard') : difficulty,
       estimatedTime: '45 sec',
       estimatedTimeSeconds: 45,
       bloomsLevel: 'Apply',
@@ -311,10 +395,8 @@ function generateRichDomainFallbackQuestions({ count, subjectName, topicName, ch
       questionType: item.format
     };
 
-    if (!isDuplicateQuestion(qText, excludeTexts, 0.20)) {
-      questions.push(qObj);
-      excludeTexts.push(qText);
-    }
+    questions.push(qObj);
+    excludeTexts.push(qText);
   }
 
   return questions;
