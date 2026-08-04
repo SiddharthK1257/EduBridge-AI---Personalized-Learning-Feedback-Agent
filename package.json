@@ -1,0 +1,11 @@
+{
+  "name": "edubridge-ai",
+  "version": "1.0.0",
+  "description": "EduBridge AI - Production-Ready Full-Stack AI Personalized Learning & Diagnostic Feedback Platform",
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run seed"
+  }
+}
