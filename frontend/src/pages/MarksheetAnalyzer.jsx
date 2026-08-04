@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   FileText,
   UploadCloud,
@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   BarChart3,
-  PieChart as PieChartIcon,
   Activity,
   Zap,
   TrendingUp,
@@ -19,31 +18,21 @@ import {
   Target,
   RefreshCw,
   Trash2,
-  ChevronRight,
-  ArrowRight,
   Bot,
   Send,
-  Sliders,
-  Eye,
-  Check,
   Plus,
   X,
   FileSpreadsheet,
   Brain,
   ShieldCheck,
   Layers,
-  ArrowUpRight,
-  HelpCircle,
-  BarChart2,
-  Download,
   Printer,
   GraduationCap,
   Briefcase,
   Gift,
   FileCheck,
   UserCheck,
-  CalendarDays,
-  ExternalLink
+  CalendarDays
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -58,18 +47,12 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
   LineChart,
   Line
 } from 'recharts';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
-
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
 
 const MarksheetAnalyzer = () => {
   const navigate = useNavigate();
@@ -78,7 +61,7 @@ const MarksheetAnalyzer = () => {
   // Navigation Tabs: 'upload' | 'validate' | 'dashboard' | 'deep_breakdown' | 'recovery' | 'target' | 'compare' | 'mentor' | 'bonus'
   const [activeTab, setActiveTab] = useState('upload');
   
-  // Saved Marksheets list
+  // Saved Marksheets list from MongoDB
   const [savedMarksheets, setSavedMarksheets] = useState([]);
   const [selectedMarksheet, setSelectedMarksheet] = useState(null);
   
@@ -221,45 +204,6 @@ const MarksheetAnalyzer = () => {
     }
   };
 
-  // Load Sample Marksheet for Instant Demonstration
-  const loadSampleMarksheet = () => {
-    const sampleExtracted = {
-      studentName: "Aarav Sharma",
-      rollNumber: "2026-CBSE-8849",
-      registrationNumber: "REG-90184712",
-      examName: "Class 12 Board Examination",
-      board: "CBSE (Central Board of Secondary Education)",
-      university: "N/A",
-      college: "Delhi Public School",
-      classGrade: "Class 12",
-      semester: "Final Term",
-      academicYear: "2025-2026",
-      subjects: [
-        { subjectName: "Mathematics", subjectCode: "MATH-041", maxMarks: 100, obtainedMarks: 68, internalMarks: 19, externalMarks: 49, credits: 4, grade: "B1", confidence: "High" },
-        { subjectName: "Physics", subjectCode: "PHY-042", maxMarks: 100, obtainedMarks: 58, internalMarks: 18, externalMarks: 40, credits: 4, grade: "C1", confidence: "High" },
-        { subjectName: "Chemistry", subjectCode: "CHEM-043", maxMarks: 100, obtainedMarks: 76, internalMarks: 19, externalMarks: 57, credits: 4, grade: "B1", confidence: "High" },
-        { subjectName: "Computer Science", subjectCode: "CS-083", maxMarks: 100, obtainedMarks: 92, internalMarks: 20, externalMarks: 72, credits: 4, grade: "A1", confidence: "High" },
-        { subjectName: "English Core", subjectCode: "ENG-301", maxMarks: 100, obtainedMarks: 85, internalMarks: 19, externalMarks: 66, credits: 2, grade: "A2", confidence: "High" }
-      ],
-      cgpa: 7.8,
-      sgpa: 7.8,
-      overallPercentage: 75.8,
-      division: "First Division",
-      status: "Pass",
-      remarks: "Eligible for Higher Studies",
-      rawText: "Sample extracted marksheet data for Class 12 CBSE Board Examination"
-    };
-
-    setFileDetails({
-      fileName: 'Sample_CBSE_Class12_Marksheet.pdf',
-      fileUrl: '',
-      fileType: 'application/pdf',
-      fileSize: 1024 * 500
-    });
-    setExtractedData(sampleExtracted);
-    setActiveTab('validate');
-  };
-
   // Edit validation row changes
   const handleSubjectChange = (index, field, value) => {
     const updated = { ...extractedData };
@@ -283,8 +227,9 @@ const MarksheetAnalyzer = () => {
 
   const handleAddSubject = () => {
     const updated = { ...extractedData };
+    if (!updated.subjects) updated.subjects = [];
     updated.subjects.push({
-      subjectName: "New Subject",
+      subjectName: "Subject " + (updated.subjects.length + 1),
       subjectCode: "",
       maxMarks: 100,
       obtainedMarks: 70,
@@ -298,6 +243,7 @@ const MarksheetAnalyzer = () => {
     const totalObt = updated.subjects.reduce((acc, s) => acc + (Number(s.obtainedMarks) || 0), 0);
     const totalMx = updated.subjects.reduce((acc, s) => acc + (Number(s.maxMarks) || 100), 0);
     updated.overallPercentage = totalMx > 0 ? parseFloat(((totalObt / totalMx) * 100).toFixed(2)) : 0;
+    updated.cgpa = parseFloat((updated.overallPercentage / 9.5).toFixed(2));
     setExtractedData(updated);
   };
 
@@ -307,18 +253,24 @@ const MarksheetAnalyzer = () => {
     const totalObt = updated.subjects.reduce((acc, s) => acc + (Number(s.obtainedMarks) || 0), 0);
     const totalMx = updated.subjects.reduce((acc, s) => acc + (Number(s.maxMarks) || 100), 0);
     updated.overallPercentage = totalMx > 0 ? parseFloat(((totalObt / totalMx) * 100).toFixed(2)) : 0;
+    updated.cgpa = parseFloat((updated.overallPercentage / 9.5).toFixed(2));
     setExtractedData(updated);
   };
 
   // Submit Validated Data for Deep AI Analysis
   const handleRunDeepAnalysis = async () => {
+    if (!extractedData || !extractedData.subjects || extractedData.subjects.length === 0) {
+      alert('Please add at least one subject with valid marks before running analysis.');
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       const payload = {
-        fileName: fileDetails?.fileName || 'Uploaded Marksheet',
+        fileName: fileDetails?.fileName || uploadFile?.name || 'Uploaded Marksheet',
         fileUrl: fileDetails?.fileUrl || '',
-        fileType: fileDetails?.fileType || 'application/pdf',
-        fileSize: fileDetails?.fileSize || 0,
+        fileType: fileDetails?.fileType || uploadFile?.type || 'application/pdf',
+        fileSize: fileDetails?.fileSize || uploadFile?.size || 0,
         extractedData: extractedData,
         targetScore: { targetPercentage: targetPercentage }
       };
@@ -457,14 +409,14 @@ const MarksheetAnalyzer = () => {
     }
   };
 
-  // Chart Data Helpers
+  // Chart Data Helpers (Using ONLY actual extracted subjects)
   const getBarChartData = () => {
     if (!selectedMarksheet?.extractedData?.subjects) return [];
     return selectedMarksheet.extractedData.subjects.map(s => ({
       name: s.subjectName.length > 14 ? s.subjectName.substring(0, 12) + '...' : s.subjectName,
       Obtained: s.obtainedMarks,
       Max: s.maxMarks || 100,
-      Percentage: Math.round((s.obtainedMarks / (s.maxMarks || 100)) * 100)
+      Percentage: Math.round(((s.obtainedMarks || 0) / (s.maxMarks || 100)) * 100)
     }));
   };
 
@@ -481,11 +433,26 @@ const MarksheetAnalyzer = () => {
   const getTrendGraphData = () => {
     if (!savedMarksheets || savedMarksheets.length === 0) return [];
     return savedMarksheets.slice().reverse().map(m => ({
-      exam: m.extractedData?.examName ? (m.extractedData.examName.length > 10 ? m.extractedData.examName.substring(0, 8) + '..' : m.extractedData.examName) : 'Term',
+      exam: m.extractedData?.examName ? (m.extractedData.examName.length > 10 ? m.extractedData.examName.substring(0, 8) + '..' : m.extractedData.examName) : 'Scorecard',
       Percentage: m.extractedData?.overallPercentage || 0,
       CGPA: m.extractedData?.cgpa ? parseFloat((m.extractedData.cgpa * 10).toFixed(1)) : 0
     }));
   };
+
+  // Derived totals for Dashboard
+  const subjectsList = selectedMarksheet?.extractedData?.subjects || [];
+  const totalObtainedMarks = subjectsList.reduce((sum, s) => sum + (Number(s.obtainedMarks) || 0), 0);
+  const totalMaxMarks = subjectsList.reduce((sum, s) => sum + (Number(s.maxMarks) || 100), 0);
+  const averageMarksValue = subjectsList.length > 0 ? (totalObtainedMarks / subjectsList.length).toFixed(1) : '0';
+
+  const sortedSubList = [...subjectsList].sort((a, b) => {
+    const pctA = ((a.obtainedMarks || 0) / (a.maxMarks || 100)) * 100;
+    const pctB = ((b.obtainedMarks || 0) / (b.maxMarks || 100)) * 100;
+    return pctB - pctA;
+  });
+
+  const topSubject = sortedSubList[0];
+  const bottomSubject = sortedSubList[sortedSubList.length - 1];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
@@ -503,13 +470,13 @@ const MarksheetAnalyzer = () => {
               <div className="space-y-2">
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Production-Ready Multimodal Marksheet AI Engine</span>
+                  <span>AI-Powered Multimodal Marksheet Engine</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                   AI Marksheet <span className="gradient-text">Analyzer</span>
                 </h1>
                 <p className="text-slate-300 text-sm sm:text-base max-w-2xl leading-relaxed">
-                  Upload scorecards (CBSE, ICSE, State Boards, Universities, Colleges, B.Tech, BCA, JEE, NEET, etc.) for evidence-based OCR extraction, dynamic score calculations, anti-hallucinated analysis, and 1-click recovery plans.
+                  Upload your scorecard for evidence-based OCR extraction, dynamic score calculation, zero-hallucination analysis, and 1-click recovery plans using ONLY your real marks.
                 </p>
               </div>
 
@@ -553,9 +520,9 @@ const MarksheetAnalyzer = () => {
               <span className="px-2.5 py-0.5 rounded-md bg-slate-800 text-cyan-300 border border-slate-700">PNG</span>
               <span className="mx-2 text-slate-600">|</span>
               <span className="font-semibold text-slate-300">Evidence Standards:</span>
-              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">100% Dynamic Formulas</span>
-              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">Anti-Hallucinated</span>
-              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">MongoDB History Merged</span>
+              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">100% Dynamic Math</span>
+              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">Zero Hallucinations</span>
+              <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">MongoDB History Saved</span>
             </div>
           </div>
 
@@ -783,7 +750,7 @@ const MarksheetAnalyzer = () => {
                         <img src={filePreviewUrl} alt="Preview" className="w-14 h-14 object-cover rounded-xl border border-slate-700" />
                       ) : (
                         <div className="w-14 h-14 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
-                          PDF
+                          FILE
                         </div>
                       )}
                       <div>
@@ -822,18 +789,6 @@ const MarksheetAnalyzer = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Instant Sample Marksheet Demonstration Option */}
-                <div className="pt-6 border-t border-slate-800 flex flex-col items-center justify-center space-y-3">
-                  <p className="text-xs text-slate-400">Don't have a marksheet file handy right now?</p>
-                  <button
-                    onClick={loadSampleMarksheet}
-                    className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold transition-all flex items-center space-x-2"
-                  >
-                    <FileSpreadsheet className="w-4 h-4 text-indigo-400" />
-                    <span>Try with Sample CBSE Class 12 Marksheet</span>
-                  </button>
-                </div>
               </div>
             </motion.div>
           )}
@@ -845,13 +800,21 @@ const MarksheetAnalyzer = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              {/* Guidance Alert */}
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm flex items-start space-x-3">
+              {/* Guidance / Manual Confirmation Alert */}
+              <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start space-x-3 ${
+                extractedData.lowConfidence || extractedData.requiresManualConfirmation || !extractedData.subjects || extractedData.subjects.length === 0
+                  ? 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              }`}>
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-amber-200">Step 2: Verify & Edit OCR Extracted Scorecard</p>
-                  <p className="text-amber-300/90 text-xs leading-relaxed mt-0.5">
-                    Review and confirm your extracted marks below. You can edit any subject mark or field before launching the deep AI analysis pipeline. Overall percentage is calculated dynamically as <span className="underline font-mono font-bold">(sum of obtained marks ÷ total max marks) × 100</span>.
+                  <p className="font-semibold text-white">
+                    {extractedData.lowConfidence || extractedData.requiresManualConfirmation
+                      ? '⚠️ OCR Confidence Low — Manual Confirmation Required'
+                      : 'Step 2: Verify & Edit Extracted Scorecard Data'}
+                  </p>
+                  <p className="text-slate-300 text-xs leading-relaxed mt-0.5">
+                    Review your extracted subject names and marks below. You can edit any subject, adjust marks, or click "Add Subject Row" to add missing subjects before proceeding. Overall percentage is calculated dynamically as <span className="underline font-mono font-bold">(sum of obtained marks ÷ total max marks) × 100</span>.
                   </p>
                 </div>
               </div>
@@ -984,7 +947,7 @@ const MarksheetAnalyzer = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80">
-                      {extractedData.subjects.map((sub, idx) => (
+                      {(extractedData.subjects || []).map((sub, idx) => (
                         <tr key={idx} className="hover:bg-slate-900/50 transition-colors">
                           <td className="py-2.5 px-3">
                             <input
@@ -1086,7 +1049,7 @@ const MarksheetAnalyzer = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              {/* Key Metric Hero Cards */}
+              {/* Key Metric Hero Cards - Calculated Strictly from Uploaded Marks */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 {/* Performance Rating */}
@@ -1105,7 +1068,7 @@ const MarksheetAnalyzer = () => {
                   </div>
                 </div>
 
-                {/* Overall Percentage */}
+                {/* Overall Percentage & Marks */}
                 <div className="glass-card p-5 border border-slate-800 rounded-3xl flex items-center space-x-4 bg-gradient-to-br from-emerald-900/30 via-slate-900 to-slate-950">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                     <TrendingUp className="w-6 h-6" />
@@ -1116,7 +1079,7 @@ const MarksheetAnalyzer = () => {
                       {selectedMarksheet.extractedData?.overallPercentage || selectedMarksheet.aiAnalysis?.overallPercentage || '0'}%
                     </p>
                     <p className="text-[11px] text-emerald-400 font-semibold mt-0.5">
-                      CGPA: {selectedMarksheet.extractedData?.cgpa || 'N/A'}
+                      Marks: {totalObtainedMarks} / {totalMaxMarks} (Avg: {averageMarksValue})
                     </p>
                   </div>
                 </div>
@@ -1155,6 +1118,25 @@ const MarksheetAnalyzer = () => {
 
               </div>
 
+              {/* Strongest & Weakest Subject Highlights */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider block">Strongest Subject</span>
+                    <span className="text-lg font-extrabold text-white">{topSubject ? topSubject.subjectName : 'N/A'}</span>
+                  </div>
+                  <span className="text-xl font-black text-emerald-400">{topSubject ? `${topSubject.obtainedMarks}/${topSubject.maxMarks || 100}` : ''}</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-rose-400 font-bold uppercase tracking-wider block">Weakest Subject</span>
+                    <span className="text-lg font-extrabold text-white">{bottomSubject ? bottomSubject.subjectName : 'N/A'}</span>
+                  </div>
+                  <span className="text-xl font-black text-rose-400">{bottomSubject ? `${bottomSubject.obtainedMarks}/${bottomSubject.maxMarks || 100}` : ''}</span>
+                </div>
+              </div>
+
               {/* CONTINUOUS AI AUTO-UPDATE BANNER */}
               <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/60 border border-indigo-500/30 text-indigo-200 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start space-x-3">
@@ -1171,7 +1153,7 @@ const MarksheetAnalyzer = () => {
                 </div>
                 <div className="px-3 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-semibold text-[11px] shrink-0 flex items-center space-x-1.5">
                   <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Real-Time Score Dynamic Calculation</span>
+                  <span>Real-Time Dynamic Score Calculation</span>
                 </div>
               </div>
 
@@ -1257,7 +1239,7 @@ const MarksheetAnalyzer = () => {
                 </div>
               </div>
 
-              {/* HISTORICAL STUDENT DATA COMPARISON */}
+              {/* HISTORICAL STUDENT DATA COMPARISON FROM MONGODB */}
               <div className="glass-card p-6 border border-slate-800 rounded-3xl space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-white flex items-center space-x-2">
@@ -1380,6 +1362,7 @@ const MarksheetAnalyzer = () => {
                         <th className="py-3 px-2">Difficulty</th>
                         <th className="py-3 px-2">Rank</th>
                         <th className="py-3 px-2">Performance</th>
+                        <th className="py-3 px-2">Estimated Chapters</th>
                         <th className="py-3 px-2">Study Hours</th>
                         <th className="py-3 px-3 text-right">Practice</th>
                       </tr>
@@ -1406,6 +1389,13 @@ const MarksheetAnalyzer = () => {
                             }`}>
                               {sub.performanceLevel}
                             </span>
+                          </td>
+                          <td className="py-3 px-2 text-slate-300">
+                            {(sub.estimatedChapterWeaknesses || [sub.subjectName + ' Chapter 1 (AI Estimate)']).map((ch, cidx) => (
+                              <span key={cidx} className="inline-block bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] mr-1 mb-1">
+                                {ch}
+                              </span>
+                            ))}
                           </td>
                           <td className="py-3 px-2 font-medium">{sub.estimatedStudyHours} Hours</td>
                           <td className="py-3 px-3 text-right">
@@ -1483,9 +1473,11 @@ const MarksheetAnalyzer = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-white flex items-center space-x-2">
                     <Layers className="w-5 h-5 text-purple-400" />
-                    <span>Chapter-Wise Performance & Questions Attempted</span>
+                    <span>Chapter-Wise Performance & Inferred Chapter Weaknesses</span>
                   </h3>
-                  <span className="text-xs text-slate-400 font-mono">Strict Mock Test Metrics</span>
+                  <span className="text-xs text-purple-300 font-mono bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-full">
+                    AI Syllabus Inference (Clearly Marked)
+                  </span>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1505,7 +1497,7 @@ const MarksheetAnalyzer = () => {
                       {(selectedMarksheet.aiAnalysis?.chapterAnalysis && selectedMarksheet.aiAnalysis.chapterAnalysis.length > 0
                         ? selectedMarksheet.aiAnalysis.chapterAnalysis
                         : (selectedMarksheet.extractedData?.subjects || []).map(s => ({
-                            chapterName: s.subjectName + ' Core Chapter',
+                            chapterName: s.subjectName + ' Chapter 1 (AI Estimate)',
                             subjectName: s.subjectName,
                             accuracy: 'Insufficient verified data.',
                             questionsAttempted: 'Insufficient verified data.',
@@ -1515,7 +1507,12 @@ const MarksheetAnalyzer = () => {
                           }))
                       ).map((ch, idx) => (
                         <tr key={idx} className="hover:bg-slate-900/50 transition-colors">
-                          <td className="py-3 px-3 font-semibold text-white">{ch.chapterName}</td>
+                          <td className="py-3 px-3 font-semibold text-white flex items-center space-x-2">
+                            <span>{ch.chapterName}</span>
+                            {ch.chapterName.includes('(AI Estimate)') && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">AI Estimate</span>
+                            )}
+                          </td>
                           <td className="py-3 px-2 text-slate-400">{ch.subjectName}</td>
                           <td className="py-3 px-2 font-bold text-purple-300">{ch.accuracy}</td>
                           <td className="py-3 px-2">{ch.questionsAttempted}</td>
@@ -1720,7 +1717,7 @@ const MarksheetAnalyzer = () => {
                     <span>Target Score & Daily Study Hours Calculator</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300">
-                    Select your desired target percentage (e.g., 95%). EduBridge AI calculates the current score gap, required marks, daily study hours, expected completion date, probability of success, and weak topics to master.
+                    Select your desired target percentage. EduBridge AI calculates current gap, required marks, daily study hours, probability of success, and completion date based on your real marks ({selectedMarksheet.extractedData?.overallPercentage}%).
                   </p>
                 </div>
 
@@ -1850,14 +1847,14 @@ const MarksheetAnalyzer = () => {
                     <span>Comparative Marksheet & Multi-Semester Progress Analyzer</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300">
-                    Compare Semester 1, Semester 2, Board exams, or Mock Tests stored in MongoDB history.
+                    Compare any two marksheets stored in your MongoDB account.
                   </p>
                 </div>
 
                 {/* Marksheet Pickers */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-2">Previous Semester / Term 1</label>
+                    <label className="block text-xs font-bold text-slate-300 mb-2">First Scorecard</label>
                     <select
                       value={compareId1}
                       onChange={(e) => setCompareId1(e.target.value)}
@@ -1873,7 +1870,7 @@ const MarksheetAnalyzer = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-2">Recent Semester / Term 2</label>
+                    <label className="block text-xs font-bold text-slate-300 mb-2">Second Scorecard</label>
                     <select
                       value={compareId2}
                       onChange={(e) => setCompareId2(e.target.value)}
@@ -1914,12 +1911,12 @@ const MarksheetAnalyzer = () => {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs">
                       <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-400">Previous Score</p>
+                        <p className="text-slate-400">First Marksheet Score</p>
                         <p className="text-xl font-black text-slate-200">{compareData.marksheet1?.percentage}%</p>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-400">Recent Score</p>
+                        <p className="text-slate-400">Second Marksheet Score</p>
                         <p className="text-xl font-black text-indigo-400">{compareData.marksheet2?.percentage}%</p>
                       </div>
 
@@ -1961,8 +1958,8 @@ const MarksheetAnalyzer = () => {
                         <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
                           <tr>
                             <th className="py-3 px-3">Subject</th>
-                            <th className="py-3 px-2">Previous Marks</th>
-                            <th className="py-3 px-2">Recent Marks</th>
+                            <th className="py-3 px-2">First Marksheet</th>
+                            <th className="py-3 px-2">Second Marksheet</th>
                             <th className="py-3 px-2">Difference</th>
                             <th className="py-3 px-2">Status</th>
                           </tr>
@@ -1971,10 +1968,10 @@ const MarksheetAnalyzer = () => {
                           {(compareData.subjectComparison || []).map((sc, idx) => (
                             <tr key={idx} className="hover:bg-slate-900/50 transition-colors">
                               <td className="py-2.5 px-3 font-semibold text-white">{sc.subjectName}</td>
-                              <td className="py-2.5 px-2">{sc.marksPrevious !== null ? sc.marksPrevious : 'Insufficient verified data.'}</td>
+                              <td className="py-2.5 px-2">{sc.marksPrevious !== null ? sc.marksPrevious : 'N/A'}</td>
                               <td className="py-2.5 px-2 font-bold text-white">{sc.marksCurrent}</td>
                               <td className="py-2.5 px-2 font-bold">
-                                {sc.diff !== null ? (sc.diff > 0 ? `+${sc.diff}` : sc.diff) : 'Insufficient verified data.'}
+                                {sc.diff !== null ? (sc.diff > 0 ? `+${sc.diff}` : sc.diff) : 'N/A'}
                               </td>
                               <td className="py-2.5 px-2">
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -2011,37 +2008,45 @@ const MarksheetAnalyzer = () => {
                   <div>
                     <h3 className="text-base font-bold text-white">Ask AI Mentor About My Marksheet</h3>
                     <p className="text-xs text-slate-400">
-                      Answers based STRICTLY on verified marksheet data & MongoDB student database.
+                      Answers based STRICTLY on your actual marksheet data for {selectedMarksheet.extractedData?.examName || 'your scorecard'}.
                     </p>
                   </div>
                 </div>
 
-                {/* Preset Prompt Buttons */}
+                {/* Dynamic Preset Prompt Buttons based on actual subjects */}
                 <div className="flex flex-wrap gap-2 text-xs">
                   <button
-                    onClick={() => handleSendChatMessage("Why are my weak subject marks low and how do I fix them based on evidence?")}
+                    onClick={() => handleSendChatMessage(`Which subject is my weakest and how many marks do I need to improve?`)}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
                   >
-                    ❓ Why are my weak subject marks low?
+                    ❓ Which subject is weakest?
                   </button>
                   <button
-                    onClick={() => handleSendChatMessage("Which subject should I prioritize studying first based on my scorecard?")}
+                    onClick={() => handleSendChatMessage(`How many marks should I improve to reach my target score?`)}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
                   >
-                    🎯 Which subject should I study first?
+                    🎯 How many marks to improve?
                   </button>
                   <button
-                    onClick={() => handleSendChatMessage("How can I boost my overall percentage to 90%?")}
+                    onClick={() => handleSendChatMessage(`Can I score above 90% in my next examination?`)}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
                   >
-                    📈 How can I improve to 90%?
+                    📈 Can I score above 90%?
                   </button>
                   <button
-                    onClick={() => handleSendChatMessage("Generate 3 practice questions for my weakest subject")}
+                    onClick={() => handleSendChatMessage(`Create a personalized revision timetable for my weak subjects.`)}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
                   >
-                    📝 Practice questions for weak subjects
+                    📝 Create revision timetable
                   </button>
+                  {subjectsList.length >= 2 && (
+                    <button
+                      onClick={() => handleSendChatMessage(`Compare my performance between ${subjectsList[0]?.subjectName} and ${subjectsList[1]?.subjectName}.`)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
+                    >
+                      ⚖️ Compare {subjectsList[0]?.subjectName} & {subjectsList[1]?.subjectName}
+                    </button>
+                  )}
                 </div>
 
                 {/* Chat History Box */}
@@ -2111,7 +2116,7 @@ const MarksheetAnalyzer = () => {
                     <span>AI Reports, Career & Academic Guidance Hub</span>
                   </h2>
                   <p className="text-xs text-slate-300 mt-1">
-                    Download official AI PDF reports, export reports for teachers/parents, and view career/college guidance.
+                    Download official AI PDF reports, export teacher/parent summaries, and view personalized career/college guidance.
                   </p>
                 </div>
 
@@ -2170,7 +2175,7 @@ const MarksheetAnalyzer = () => {
                 <div className="glass-card p-6 border border-slate-800 rounded-3xl space-y-4">
                   <h3 className="text-base font-bold text-white flex items-center space-x-2">
                     <Briefcase className="w-5 h-5 text-amber-400" />
-                    <span>Career Suggestions (Based on Strengths)</span>
+                    <span>Career Suggestions (Based on Actual Strengths)</span>
                   </h3>
                   <div className="space-y-3 text-xs">
                     {(selectedMarksheet.aiAnalysis?.bonusFeatures?.careerSuggestions || []).map((cs, idx) => (
