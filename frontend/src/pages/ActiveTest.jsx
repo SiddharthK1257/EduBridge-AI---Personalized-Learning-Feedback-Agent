@@ -139,7 +139,7 @@ const ActiveTest = () => {
     );
   }
 
-  if (error || !test) {
+  if (error || !test || !Array.isArray(test.questions) || test.questions.length === 0) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex flex-col">
         <Navbar />
@@ -147,7 +147,7 @@ const ActiveTest = () => {
           <div className="glass-card p-8 rounded-3xl border border-slate-800 max-w-md">
             <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Test Unavailable</h3>
-            <p className="text-sm text-slate-400 mb-6">{error || 'Unable to retrieve test'}</p>
+            <p className="text-sm text-slate-400 mb-6">{error || 'No questions available for this test paper yet.'}</p>
             <button
               onClick={() => navigate('/generate-test')}
               className="px-6 py-3 rounded-xl text-sm font-bold text-white gradient-bg"
@@ -160,7 +160,7 @@ const ActiveTest = () => {
     );
   }
 
-  const currentQ = test.questions[currentIndex];
+  const currentQ = test.questions[currentIndex] || {};
   const totalQuestions = test.questions.length;
   const answeredCount = Object.keys(userAnswers).length;
 
@@ -256,7 +256,7 @@ const ActiveTest = () => {
 
             {/* Options List */}
             <div className="space-y-3.5">
-              {currentQ.options.map((optionText, idx) => {
+              {(currentQ.options || []).map((optionText, idx) => {
                 const isSelected = userAnswers[currentQ._id]?.selectedOptionIndex === idx;
                 const optionLabel = String.fromCharCode(65 + idx); // A, B, C, D
 
