@@ -1,16 +1,23 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const { MongoMemoryServer } = require('mongodb-memory-server');
+
+// Set public DNS servers to resolve MongoDB Atlas SRV records on Windows/ISPs
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('[DB] Custom DNS setup warning:', dnsErr.message);
+}
 
 let mongoServer;
 
 const connectDB = async () => {
   try {
     const connStr = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/edubridge_ai';
-    console.log(`[DB] Attempting connection to MongoDB at: ${connStr}`);
+    console.log(`[DB] Attempting connection to MongoDB at: ${connStr.replace(/:([^@]+)@/, ':****@')}`);
     
-    // Set short timeout for direct connection attempt so fallback works fast if local mongo isn't running
     await mongoose.connect(connStr, {
-      serverSelectionTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 10000,
     });
     console.log(`[DB] MongoDB Connected successfully to external/local instance: ${mongoose.connection.host}`);
   } catch (err) {
@@ -29,3 +36,4 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+
