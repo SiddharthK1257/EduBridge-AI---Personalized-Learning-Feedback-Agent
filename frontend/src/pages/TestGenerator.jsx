@@ -245,7 +245,7 @@ const TestGenerator = () => {
   const currentSubjectObj = subjects.find(s => s._id === selectedSubjectId);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 selection:bg-indigo-500">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-emerald-500">
       <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
@@ -254,45 +254,45 @@ const TestGenerator = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden space-y-8">
           
           {/* Header */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-widest mb-1">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center space-x-2 text-emerald-700 font-bold text-xs uppercase tracking-widest mb-1">
               <BrainCircuit className="w-4 h-4" />
               <span>Smart AI Question Generation Engine</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Dynamic <span className="gradient-text">Gemini AI Test Generator</span>
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1 font-medium">
               All Subjects, Chapters, and Topics are fetched live from MongoDB. Choose your target exam and parameters below.
             </p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between">
               <span>{error}</span>
-              <button onClick={() => fetchSubjects()} className="px-3 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl text-xs font-bold">
+              <button onClick={() => fetchSubjects()} className="px-3 py-1 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl text-xs font-bold border border-rose-300">
                 Retry Seeding & Fetching
               </button>
             </div>
           )}
 
           {/* Form Configuration Card */}
-          <form onSubmit={handleGenerateTest} className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
+          <form onSubmit={handleGenerateTest} className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-md space-y-6">
             
             {/* Step 1: Exam & Grade */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <div>
-                <label htmlFor="exam-select" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center">
-                  <GraduationCap className="w-4 h-4 mr-2 text-indigo-400" />
+                <label htmlFor="exam-select" className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center">
+                  <GraduationCap className="w-4 h-4 mr-2 text-emerald-600" />
                   1. Target Examination
                 </label>
                 <select
                   id="exam-select"
                   value={selectedExam}
                   onChange={(e) => setSelectedExam(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium bg-slate-900 text-slate-100 border border-slate-800 focus:border-indigo-500 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 >
                   {EXAMS_LIST.map((exam) => (
                     <option key={exam} value={exam}>{exam}</option>
@@ -301,15 +301,15 @@ const TestGenerator = () => {
               </div>
 
               <div>
-                <label htmlFor="grade-select" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center">
-                  <BookOpen className="w-4 h-4 mr-2 text-purple-400" />
+                <label htmlFor="grade-select" className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center">
+                  <BookOpen className="w-4 h-4 mr-2 text-violet-600" />
                   2. Class / Grade Level
                 </label>
                 <select
                   id="grade-select"
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium bg-slate-900 text-slate-100 border border-slate-800 focus:border-indigo-500 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 >
                   {GRADES_LIST.map((grade) => (
                     <option key={grade} value={grade}>{grade}</option>
@@ -321,21 +321,21 @@ const TestGenerator = () => {
 
             {/* Step 2: Subject Selection Dropdown & Grid */}
             <div>
-              <label htmlFor="subject-select" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <label htmlFor="subject-select" className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
                 <span className="flex items-center">
-                  <Layers className="w-4 h-4 mr-2 text-emerald-400" />
+                  <Layers className="w-4 h-4 mr-2 text-teal-600" />
                   3. Choose Subject (MongoDB API)
                 </span>
                 {loadingSubjects && (
-                  <span className="text-[11px] text-indigo-400 flex items-center lowercase font-normal">
-                    <Loader2 className="w-3 h-3 animate-spin mr-1" /> fetching subjects...
+                  <span className="text-[11px] text-emerald-700 flex items-center lowercase font-bold">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1 text-emerald-600" /> fetching subjects...
                   </span>
                 )}
               </label>
 
               {loadingSubjects ? (
-                <div className="py-6 text-sm text-slate-400 flex items-center justify-center bg-slate-900/50 rounded-2xl border border-slate-800">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2 text-indigo-400" />
+                <div className="py-6 text-sm text-slate-600 flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-200">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2 text-emerald-600" />
                   <span>Fetching dynamic subjects from MongoDB...</span>
                 </div>
               ) : (
@@ -345,7 +345,7 @@ const TestGenerator = () => {
                     id="subject-select"
                     value={selectedSubjectId}
                     onChange={(e) => setSelectedSubjectId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl glass-input text-sm font-semibold bg-slate-900 text-slate-100 border border-slate-800 focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-bold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                   >
                     {subjects.length === 0 ? (
                       <option value="">No subjects found. Auto-seeding MongoDB...</option>
@@ -368,12 +368,12 @@ const TestGenerator = () => {
                           onClick={() => setSelectedSubjectId(sub._id)}
                           className={`p-3.5 rounded-2xl border text-left transition-all ${
                             selectedSubjectId === sub._id
-                              ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-glow-indigo'
-                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                              ? 'bg-emerald-50 border-emerald-500 text-emerald-950 shadow-soft-sm font-black ring-2 ring-emerald-400/30'
+                              : 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/30'
                           }`}
                         >
-                          <p className="font-bold text-sm truncate">{sub.name}</p>
-                          <p className="text-[11px] text-slate-500 capitalize">{sub.category}</p>
+                          <p className="font-extrabold text-sm truncate">{sub.name}</p>
+                          <p className="text-[11px] text-slate-500 capitalize font-medium">{sub.category}</p>
                         </button>
                       ))}
                     </div>
@@ -389,20 +389,20 @@ const TestGenerator = () => {
                 onClick={() => handleTestTypeChange('Chapter')}
                 className={`p-5 rounded-2xl border flex items-center justify-between transition-all ${
                   testType === 'Chapter'
-                    ? 'bg-purple-600/20 border-purple-500 text-white shadow-glow-purple'
-                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-400 text-violet-950 shadow-soft-sm ring-2 ring-violet-400/30 font-extrabold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2.5 rounded-xl ${testType === 'Chapter' ? 'bg-purple-500/20 text-purple-300' : 'bg-slate-800 text-slate-500'}`}>
+                  <div className={`p-2.5 rounded-xl ${testType === 'Chapter' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-left">Chapter Wise Test</h4>
-                    <p className="text-xs text-slate-400 text-left">Comprehensive chapter coverage (15 Qs)</p>
+                    <h4 className="font-black text-sm text-left text-slate-900">Chapter Wise Test</h4>
+                    <p className="text-xs text-slate-600 text-left font-medium">Comprehensive chapter coverage (15 Qs)</p>
                   </div>
                 </div>
-                <CheckCircle2 className={`w-5 h-5 ${testType === 'Chapter' ? 'text-purple-400' : 'text-slate-700'}`} />
+                <CheckCircle2 className={`w-5 h-5 ${testType === 'Chapter' ? 'text-violet-600' : 'text-slate-300'}`} />
               </button>
 
               <button
@@ -410,20 +410,20 @@ const TestGenerator = () => {
                 onClick={() => handleTestTypeChange('Topic')}
                 className={`p-5 rounded-2xl border flex items-center justify-between transition-all ${
                   testType === 'Topic'
-                    ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-glow-indigo'
-                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    ? 'bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-400 text-teal-950 shadow-soft-sm ring-2 ring-teal-400/30 font-extrabold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2.5 rounded-xl ${testType === 'Topic' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-500'}`}>
+                  <div className={`p-2.5 rounded-xl ${testType === 'Topic' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <Bookmark className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-left">Topic Wise Test</h4>
-                    <p className="text-xs text-slate-400 text-left">Target single specific topic (5 Qs)</p>
+                    <h4 className="font-black text-sm text-left text-slate-900">Topic Wise Test</h4>
+                    <p className="text-xs text-slate-600 text-left font-medium">Target single specific topic (5 Qs)</p>
                   </div>
                 </div>
-                <CheckCircle2 className={`w-5 h-5 ${testType === 'Topic' ? 'text-indigo-400' : 'text-slate-700'}`} />
+                <CheckCircle2 className={`w-5 h-5 ${testType === 'Topic' ? 'text-teal-600' : 'text-slate-300'}`} />
               </button>
             </div>
 
@@ -431,19 +431,19 @@ const TestGenerator = () => {
             <div>
               <label 
                 htmlFor={testType === 'Chapter' ? 'chapter-select' : 'topic-select'} 
-                className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between"
+                className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between"
               >
                 <span>4. Select Specific {testType} ({currentSubjectObj ? currentSubjectObj.name : 'Subject'})</span>
                 {loadingSubItems && (
-                  <span className="text-[11px] text-purple-400 flex items-center lowercase font-normal">
-                    <Loader2 className="w-3 h-3 animate-spin mr-1" /> loading {testType.toLowerCase()}s...
+                  <span className="text-[11px] text-violet-700 flex items-center lowercase font-bold">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1 text-violet-600" /> loading {testType.toLowerCase()}s...
                   </span>
                 )}
               </label>
 
               {loadingSubItems ? (
-                <div className="py-4 px-4 rounded-xl glass-input text-xs text-slate-400 flex items-center bg-slate-900/60 border border-slate-800">
-                  <Loader2 className="w-4 h-4 animate-spin mr-2 text-purple-400" />
+                <div className="py-4 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2 text-violet-600" />
                   <span>Fetching {testType.toLowerCase()}s for {currentSubjectObj?.name || 'subject'} from MongoDB...</span>
                 </div>
               ) : testType === 'Chapter' ? (
@@ -452,14 +452,14 @@ const TestGenerator = () => {
                     id="chapter-select"
                     value={selectedChapterId}
                     onChange={(e) => setSelectedChapterId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl glass-input text-sm font-semibold bg-slate-900 text-slate-100 border border-slate-800 focus:border-purple-500 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-bold focus:border-violet-500 focus:outline-none shadow-soft-sm"
                   >
                     {chapters.map((c) => (
                       <option key={c._id} value={c._id}>{c.name}</option>
                     ))}
                   </select>
                 ) : (
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
                     No specific chapters listed in MongoDB for {currentSubjectObj?.name || 'this subject'}. A general subject test paper will be generated.
                   </div>
                 )
@@ -469,14 +469,14 @@ const TestGenerator = () => {
                     id="topic-select"
                     value={selectedTopicId}
                     onChange={(e) => setSelectedTopicId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl glass-input text-sm font-semibold bg-slate-900 text-slate-100 border border-slate-800 focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-bold focus:border-teal-500 focus:outline-none shadow-soft-sm"
                   >
                     {topics.map((t) => (
                       <option key={t._id} value={t._id}>{t.name}</option>
                     ))}
                   </select>
                 ) : (
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
                     No specific topics listed in MongoDB for {currentSubjectObj?.name || 'this subject'}. A general subject test paper will be generated.
                   </div>
                 )
@@ -487,8 +487,8 @@ const TestGenerator = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
               
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center">
-                  <Flame className="w-4 h-4 mr-2 text-amber-400" />
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center">
+                  <Flame className="w-4 h-4 mr-2 text-amber-500" />
                   5. Difficulty Level
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -499,8 +499,8 @@ const TestGenerator = () => {
                       onClick={() => setDifficulty(lvl)}
                       className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                         difficulty === lvl
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                          ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-soft-sm font-black'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       {lvl}
@@ -510,8 +510,8 @@ const TestGenerator = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center">
-                  <Sliders className="w-4 h-4 mr-2 text-indigo-400" />
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2 flex items-center">
+                  <Sliders className="w-4 h-4 mr-2 text-teal-600" />
                   6. Question Count
                 </label>
                 <div className="grid grid-cols-6 gap-2">
@@ -522,8 +522,8 @@ const TestGenerator = () => {
                       onClick={() => setQuestionCount(num)}
                       className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                         questionCount === num
-                          ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                          ? 'bg-emerald-100 border-emerald-400 text-emerald-900 shadow-soft-sm font-black'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       {num}
@@ -539,7 +539,7 @@ const TestGenerator = () => {
               <button
                 type="submit"
                 disabled={generating || !selectedSubjectId || loadingSubjects}
-                className="w-full py-4 px-6 rounded-2xl text-base font-extrabold text-white gradient-bg shadow-glow-indigo hover:opacity-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
+                className="w-full py-4 px-6 rounded-2xl text-base font-extrabold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-violet-600 shadow-glow-emerald hover:opacity-95 active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
               >
                 {generating ? (
                   <>
@@ -548,7 +548,7 @@ const TestGenerator = () => {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 text-white" />
+                    <Sparkles className="w-5 h-5 text-amber-300" />
                     <span>
                       {pregeneratedTest ? '✨ Test Ready - Launch Instantly' : 'Generate AI Test Paper & Start'}
                     </span>
@@ -558,15 +558,15 @@ const TestGenerator = () => {
               </button>
 
               {generating && (
-                <div className="p-6 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-center space-y-3 animate-pulse">
-                  <div className="flex items-center justify-center space-x-2 text-indigo-400 font-bold text-sm">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-3 shadow-soft-sm animate-pulse">
+                  <div className="flex items-center justify-center space-x-2 text-emerald-800 font-extrabold text-sm">
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
                     <span>{loadingProgressMessage}</span>
                   </div>
-                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full w-4/5 animate-pulse" />
+                  <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-600 h-full w-4/5 animate-pulse rounded-full" />
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-600 font-medium">
                     Generating {questionCount} original questions in a single request using Gemini 2.0 Flash. Target time: &lt; 3 seconds.
                   </p>
                 </div>

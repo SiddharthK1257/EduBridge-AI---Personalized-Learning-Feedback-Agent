@@ -33,6 +33,7 @@ import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
 import Footer from '../components/layout/Footer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DrillTestModal from '../components/drill/DrillTestModal';
 import api from '../services/api';
 
 const TestResult = () => {
@@ -42,6 +43,10 @@ const TestResult = () => {
   const [resultData, setResultData] = useState(null);
   const [error, setError] = useState('');
   const [expandedQuestion, setExpandedQuestion] = useState(null);
+
+  // Drill Test Modal State
+  const [drillModalOpen, setDrillModalOpen] = useState(false);
+  const [activeDrillTopics, setActiveDrillTopics] = useState([]);
 
   // Recovery Plan Tab
   const [recoveryTab, setRecoveryTab] = useState('7day');
@@ -101,7 +106,7 @@ const TestResult = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner label="Fetching Gemini AI diagnostic analysis & question review..." />
@@ -112,14 +117,14 @@ const TestResult = () => {
 
   if (error || !resultData) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-6 text-center">
-          <div className="glass-card p-8 rounded-3xl border border-slate-800 max-w-md">
-            <AlertTriangle className="w-12 h-12 text-rose-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Result Error</h3>
-            <p className="text-sm text-slate-400 mb-6">{error || 'Result details missing'}</p>
-            <Link to="/dashboard" className="px-6 py-3 rounded-xl text-sm font-bold text-white gradient-bg">
+          <div className="glass-card p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-md max-w-md">
+            <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+            <h3 className="text-xl font-black text-slate-900 mb-2">Result Error</h3>
+            <p className="text-sm text-slate-600 mb-6">{error || 'Result details missing'}</p>
+            <Link to="/dashboard" className="px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-glow-emerald">
               Go to Dashboard
             </Link>
           </div>
@@ -135,8 +140,37 @@ const TestResult = () => {
 
   const isZeroScore = attempt.correctCount === 0 || attempt.accuracy === 0;
 
+  // Extract structured weak topics for targeted AI Drill Tests
+  const extractedWeakTopics = (() => {
+    const list = [];
+    if (Array.isArray(feedback?.weaknesses) && feedback.weaknesses.length > 0) {
+      list.push(...feedback.weaknesses);
+    }
+    if (Array.isArray(feedback?.topicWiseAnalysis)) {
+      feedback.topicWiseAnalysis
+        .filter(t => t && (t.accuracy < 70 || t.weaknessScore > 50))
+        .forEach(t => { if (t.topicName) list.push(t.topicName); });
+    }
+    if (Array.isArray(feedback?.conceptsNeedingRevision) && feedback.conceptsNeedingRevision.length > 0) {
+      list.push(...feedback.conceptsNeedingRevision);
+    }
+    if (mockTest.topic?.name) {
+      list.push(mockTest.topic.name);
+    }
+    const cleanList = Array.from(new Set(list.filter(t => t && typeof t === 'string' && t.trim().length > 0)));
+    return cleanList.length > 0 ? cleanList : [mockTest.subject?.name ? `${mockTest.subject.name} Problem Solving Foundations` : 'Core Subject Mastery'];
+  })();
+
+  // Extract incorrect questions context for AI drill context
+  const incorrectQuestionsList = (userAnswers || [])
+    .filter(a => !a.isCorrect)
+    .map(a => ({
+      questionText: a.question?.questionText || a.questionText || a.question?.question || 'Diagnostic practice question',
+      topic: a.question?.topic?.name || a.topic || mockTest.subject?.name || ''
+    }));
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 selection:bg-indigo-500">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-emerald-500">
       <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
@@ -145,59 +179,92 @@ const TestResult = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden space-y-8">
           
           {/* Header Banner */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-md relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div>
-                <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-widest mb-1">
-                  <Sparkles className="w-4 h-4" />
+                <div className="flex items-center space-x-2 text-emerald-700 font-extrabold text-xs uppercase tracking-widest mb-1">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
                   <span>Gemini AI Diagnostic Report</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                   {mockTest.title || 'Diagnostic Test Result'}
                 </h1>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-600 text-sm mt-1 font-medium">
                   {mockTest.exam} • {mockTest.subject?.name} • Submitted on {new Date(attempt.createdAt).toLocaleDateString()}
                 </p>
               </div>
 
               {/* Score Circle */}
-              <div className="flex items-center space-x-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-soft-sm">
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 block uppercase font-bold tracking-wider">Overall Grade</span>
-                  <span className={`text-2xl font-black ${isZeroScore ? 'text-rose-400' : 'text-indigo-400'}`}>
-                    {feedback?.overallGrade || (isZeroScore ? 'Needs Focus' : 'B')}
+                  <span className="text-xs text-slate-500 block uppercase font-black tracking-wider">Overall Grade</span>
+                  <span className={`text-2xl font-black ${isZeroScore ? 'text-rose-600' : 'text-emerald-700'}`}>
+                    {feedback?.overallGrade || (isZeroScore ? 'Needs Focus' : 'B+')}
                   </span>
                 </div>
-                <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-black text-white ${
-                  isZeroScore ? 'bg-rose-600 shadow-glow-rose' : 'gradient-bg shadow-glow-indigo'
+                <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-black text-white shadow-soft-sm ${
+                  isZeroScore ? 'bg-rose-600 shadow-glow-rose' : 'bg-gradient-to-tr from-emerald-600 to-teal-600 shadow-glow-emerald'
                 }`}>
                   <span className="text-xl leading-none">{attempt.accuracy}%</span>
-                  <span className="text-[10px] opacity-80 uppercase font-bold">Accuracy</span>
+                  <span className="text-[10px] opacity-90 uppercase font-bold mt-0.5">Accuracy</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* AI Study Roadmap Auto-Generated Banner */}
-          <div className="glass-card p-6 rounded-3xl border border-indigo-500/40 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-glow-indigo">
+          {/* 🎯 PROMINENT DRILL TEST ACTION CARD (NEW CORE FEATURE) */}
+          <div className="p-6 rounded-3xl border border-teal-300 bg-gradient-to-r from-teal-50 via-emerald-50 to-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-soft-sm">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
-                <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-teal">
+                <Target className="w-6 h-6 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
-                  <span>Gemini 2.5 Flash Study Roadmap Auto-Generated!</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 bg-teal-100 px-2.5 py-0.5 rounded-full border border-teal-200">
+                    🎯 Gemini 3.7 Flash Precision Drill
+                  </span>
+                  <span className="text-xs text-slate-500 font-bold hidden sm:inline">• Adaptive Recovery</span>
+                </div>
+                <h3 className="text-base font-black text-slate-900 mt-0.5">
+                  Drill Test: Practice Topics You Need to Improve
                 </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-xs text-slate-700 mt-0.5 font-medium">
+                  Instantly generate an adaptive test specifically focused on your identified weak topics in {mockTest.subject?.name || 'this subject'}.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setActiveDrillTopics(extractedWeakTopics);
+                setDrillModalOpen(true);
+              }}
+              className="px-6 py-3 rounded-xl text-xs font-black text-white bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 shadow-glow-teal hover:opacity-95 transition-all whitespace-nowrap flex items-center space-x-2 shrink-0"
+            >
+              <Zap className="w-4 h-4 text-amber-300" />
+              <span>Start Drill Test Now 🚀</span>
+            </button>
+          </div>
+
+          {/* AI Study Roadmap Auto-Generated Banner */}
+          <div className="p-6 rounded-3xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-teal-50 to-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-soft-sm">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-emerald">
+                <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center space-x-2">
+                  <span>Gemini AI Study Roadmap Auto-Generated!</span>
+                </h3>
+                <p className="text-xs text-slate-700 mt-0.5 font-medium">
                   EduBridge AI has automatically built a personalized study roadmap & healthy life balance schedule based on your score ({attempt.accuracy}% accuracy).
                 </p>
               </div>
             </div>
             <Link
               to="/study-planner"
-              className="px-5 py-3 rounded-xl text-xs font-extrabold text-white gradient-bg shadow-glow-indigo hover:opacity-95 transition-all whitespace-nowrap flex items-center space-x-2 shrink-0"
+              className="px-5 py-3 rounded-xl text-xs font-extrabold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-glow-emerald hover:opacity-95 transition-all whitespace-nowrap flex items-center space-x-2 shrink-0"
             >
               <span>View My Study Roadmap</span>
               <ArrowRight className="w-4 h-4" />
@@ -206,38 +273,38 @@ const TestResult = () => {
 
           {/* 0% SCORE CRITICAL ALERT BADGES (STRICT RULE IMPLEMENTATION) */}
           {isZeroScore && (
-            <div className="glass-card p-6 rounded-3xl border border-rose-500/40 bg-rose-500/10 space-y-4">
-              <div className="flex items-center space-x-3 text-rose-400">
-                <AlertTriangle className="w-6 h-6 animate-pulse" />
-                <h3 className="text-lg font-bold">Critical Performance Alert (0% Score Recorded)</h3>
+            <div className="p-6 rounded-3xl border border-rose-300 bg-rose-50/80 space-y-4 shadow-soft-sm">
+              <div className="flex items-center space-x-3 text-rose-800">
+                <AlertTriangle className="w-6 h-6 text-rose-600 animate-pulse" />
+                <h3 className="text-lg font-black">Critical Performance Alert (0% Score Recorded)</h3>
               </div>
-              <p className="text-xs text-rose-200">
+              <p className="text-xs text-rose-800 font-medium">
                 No correct answers were detected in this attempt. Demonstrating zero accuracy triggers immediate priority concept rebuilding before proceeding to advanced practice.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Current Performance</span>
-                  <span className="text-sm font-extrabold text-rose-400">Critical</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Current Performance</span>
+                  <span className="text-sm font-black text-rose-700">Critical</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Learning Gap</span>
-                  <span className="text-sm font-extrabold text-rose-400">Very High</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Learning Gap</span>
+                  <span className="text-sm font-black text-rose-700">Very High</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Concept Clarity</span>
-                  <span className="text-sm font-extrabold text-rose-400">Very Low</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Concept Clarity</span>
+                  <span className="text-sm font-black text-rose-700">Very Low</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Exam Readiness</span>
-                  <span className="text-sm font-extrabold text-amber-400">Low</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Exam Readiness</span>
+                  <span className="text-sm font-black text-amber-700">Low</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Confidence</span>
-                  <span className="text-sm font-extrabold text-amber-400">Low</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Confidence</span>
+                  <span className="text-sm font-black text-amber-700">Low</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-rose-500/30 text-center">
-                  <span className="text-[11px] text-slate-400 block uppercase font-semibold">Recovery Priority</span>
-                  <span className="text-sm font-extrabold text-rose-400">Immediate</span>
+                <div className="p-3 rounded-2xl bg-white border border-rose-200 text-center shadow-soft-sm">
+                  <span className="text-[11px] text-slate-500 block uppercase font-bold">Recovery Priority</span>
+                  <span className="text-sm font-black text-rose-700">Immediate</span>
                 </div>
               </div>
             </div>
@@ -245,62 +312,62 @@ const TestResult = () => {
 
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Score</span>
-              <span className="text-xl font-extrabold text-white">{attempt.score} / {attempt.totalMarks}</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-slate-200 bg-white text-center shadow-soft-sm">
+              <span className="text-[11px] text-slate-500 block font-bold uppercase">Score</span>
+              <span className="text-xl font-black text-slate-900">{attempt.score} / {attempt.totalMarks}</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Accuracy</span>
-              <span className="text-xl font-extrabold text-indigo-400">{attempt.accuracy}%</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-slate-200 bg-white text-center shadow-soft-sm">
+              <span className="text-[11px] text-slate-500 block font-bold uppercase">Accuracy</span>
+              <span className="text-xl font-black text-emerald-700">{attempt.accuracy}%</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] font-semibold text-emerald-400 block uppercase">Correct</span>
-              <span className="text-xl font-extrabold text-emerald-400">{attempt.correctCount}</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/50 text-center shadow-soft-sm">
+              <span className="text-[11px] font-bold text-emerald-800 block uppercase">Correct</span>
+              <span className="text-xl font-black text-emerald-700">{attempt.correctCount}</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] font-semibold text-rose-400 block uppercase">Wrong</span>
-              <span className="text-xl font-extrabold text-rose-400">{attempt.wrongCount}</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-rose-200 bg-rose-50/50 text-center shadow-soft-sm">
+              <span className="text-[11px] font-bold text-rose-800 block uppercase">Wrong</span>
+              <span className="text-xl font-black text-rose-700">{attempt.wrongCount}</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Negative</span>
-              <span className="text-xl font-extrabold text-rose-300">-{attempt.negativeMarks || 0}</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-slate-200 bg-white text-center shadow-soft-sm">
+              <span className="text-[11px] text-slate-500 block font-bold uppercase">Negative</span>
+              <span className="text-xl font-black text-rose-600">-{attempt.negativeMarks || 0}</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Percentile</span>
-              <span className="text-xl font-extrabold text-purple-400">{attempt.percentile || 50}%</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-violet-200 bg-violet-50/50 text-center shadow-soft-sm">
+              <span className="text-[11px] text-violet-800 block font-bold uppercase">Percentile</span>
+              <span className="text-xl font-black text-violet-700">{attempt.percentile || 50}%</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Avg Time</span>
-              <span className="text-xl font-extrabold text-amber-400">{attempt.avgTimePerQuestionSeconds}s</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-amber-200 bg-amber-50/50 text-center shadow-soft-sm">
+              <span className="text-[11px] text-amber-800 block font-bold uppercase">Avg Time</span>
+              <span className="text-xl font-black text-amber-700">{attempt.avgTimePerQuestionSeconds}s</span>
             </div>
-            <div className="glass-card p-3.5 rounded-2xl border border-slate-800 text-center">
-              <span className="text-[11px] text-slate-400 block font-semibold uppercase">Speed</span>
-              <span className="text-xl font-extrabold text-emerald-300">{attempt.speedRating || 'Optimal'}</span>
+            <div className="glass-card p-3.5 rounded-2xl border border-teal-200 bg-teal-50/50 text-center shadow-soft-sm">
+              <span className="text-[11px] text-teal-800 block font-bold uppercase">Speed</span>
+              <span className="text-xl font-black text-teal-700">{attempt.speedRating || 'Optimal'}</span>
             </div>
           </div>
 
           {/* AI Strengths vs Weaknesses Card */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
-            <div className="flex items-center space-x-3 pb-4 border-b border-slate-800">
-              <BrainCircuit className="w-6 h-6 text-indigo-400" />
-              <h3 className="text-lg font-extrabold text-white">Gemini AI Diagnostic Performance Breakdown</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-6">
+            <div className="flex items-center space-x-3 pb-4 border-b border-slate-200">
+              <BrainCircuit className="w-6 h-6 text-emerald-600" />
+              <h3 className="text-lg font-black text-slate-900">Gemini AI Diagnostic Performance Breakdown</h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Strengths */}
               <div>
-                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center">
-                  <CheckCircle2 className="w-4 h-4 mr-1.5" /> Demonstrated Strengths
+                <h4 className="text-xs font-black text-emerald-800 uppercase tracking-wider mb-3 flex items-center">
+                  <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-600" /> Demonstrated Strengths
                 </h4>
                 {isZeroScore ? (
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium">
                     Current assessment shows no measurable strengths in this attempt. Focus should be on rebuilding fundamental concepts before moving to advanced topics.
                   </div>
                 ) : (
                   <ul className="space-y-2">
                     {(feedback?.strengths || []).map((str, idx) => (
-                      <li key={idx} className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-xs text-slate-200 flex items-start">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 mr-2.5 flex-shrink-0" />
+                      <li key={idx} className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-slate-800 flex items-start font-medium">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600 mt-1 mr-2.5 flex-shrink-0" />
                         <span>{str}</span>
                       </li>
                     ))}
@@ -310,14 +377,28 @@ const TestResult = () => {
 
               {/* Weaknesses */}
               <div>
-                <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center">
-                  <XCircle className="w-4 h-4 mr-1.5" /> Weaknesses & Concept Breakdown
+                <h4 className="text-xs font-black text-rose-800 uppercase tracking-wider mb-3 flex items-center">
+                  <XCircle className="w-4 h-4 mr-1.5 text-rose-600" /> Weaknesses & Concept Breakdown
                 </h4>
                 <ul className="space-y-2">
                   {(feedback?.weaknesses || ['Concepts need deeper foundation review']).map((wk, idx) => (
-                    <li key={idx} className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs text-slate-200 flex items-start">
-                      <span className="w-2 h-2 rounded-full bg-rose-400 mt-1 mr-2.5 flex-shrink-0" />
-                      <span>{wk}</span>
+                    <li key={idx} className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-slate-800 flex items-center justify-between font-medium">
+                      <div className="flex items-start mr-2">
+                        <span className="w-2 h-2 rounded-full bg-rose-600 mt-1 mr-2.5 flex-shrink-0" />
+                        <span>{wk}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveDrillTopics([wk]);
+                          setDrillModalOpen(true);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] border border-rose-300 transition-colors flex items-center space-x-1 shrink-0"
+                        title={`Practice Drill on ${wk}`}
+                      >
+                        <Target className="w-3 h-3 text-rose-600" />
+                        <span>Drill</span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -326,14 +407,14 @@ const TestResult = () => {
           </div>
 
           {/* TOPIC ANALYSIS TABLE */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-              <Layers className="w-5 h-5 text-purple-400" />
-              <h3 className="text-base font-bold text-white">Topic Analysis</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-200">
+              <Layers className="w-5 h-5 text-violet-600" />
+              <h3 className="text-base font-black text-slate-900">Topic Analysis</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-900/80 text-slate-400 uppercase font-bold text-[11px]">
+              <table className="w-full text-left text-xs text-slate-800">
+                <thead className="bg-slate-50 text-slate-600 uppercase font-black text-[11px] border-b border-slate-200">
                   <tr>
                     <th className="p-3.5 rounded-l-xl">Topic</th>
                     <th className="p-3.5 text-center">Questions</th>
@@ -345,17 +426,17 @@ const TestResult = () => {
                     <th className="p-3.5 rounded-r-xl">Recommendation</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {(feedback?.topicWiseAnalysis || attempt.topicWiseAccuracy || []).map((t, i) => (
-                    <tr key={i} className="hover:bg-slate-900/40">
-                      <td className="p-3.5 font-bold text-white">{t.topicName}</td>
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-3.5 font-bold text-slate-900">{t.topicName}</td>
                       <td className="p-3.5 text-center">{t.questionsCount || t.attempted || 0}</td>
-                      <td className="p-3.5 text-center text-emerald-400 font-bold">{t.correct}</td>
-                      <td className="p-3.5 text-center text-rose-400 font-bold">{t.wrong}</td>
-                      <td className="p-3.5 text-center font-extrabold text-indigo-300">{t.accuracy}%</td>
-                      <td className="p-3.5 text-center text-amber-400">{t.averageTime}s</td>
-                      <td className="p-3.5 text-center">{t.confidence || t.accuracy}%</td>
-                      <td className="p-3.5 text-slate-400 text-[11px]">{t.recommendation || 'Targeted drill'}</td>
+                      <td className="p-3.5 text-center text-emerald-700 font-extrabold">{t.correct}</td>
+                      <td className="p-3.5 text-center text-rose-700 font-extrabold">{t.wrong}</td>
+                      <td className="p-3.5 text-center font-black text-emerald-800">{t.accuracy}%</td>
+                      <td className="p-3.5 text-center text-amber-700 font-bold">{t.averageTime}s</td>
+                      <td className="p-3.5 text-center font-bold">{t.confidence || t.accuracy}%</td>
+                      <td className="p-3.5 text-slate-600 text-[11px] font-medium">{t.recommendation || 'Targeted drill'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -364,14 +445,14 @@ const TestResult = () => {
           </div>
 
           {/* CHAPTER ANALYSIS TABLE */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-              <BookOpen className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-bold text-white">Chapter Analysis</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-200">
+              <BookOpen className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-base font-black text-slate-900">Chapter Analysis</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-900/80 text-slate-400 uppercase font-bold text-[11px]">
+              <table className="w-full text-left text-xs text-slate-800">
+                <thead className="bg-slate-50 text-slate-600 uppercase font-black text-[11px] border-b border-slate-200">
                   <tr>
                     <th className="p-3.5 rounded-l-xl">Chapter</th>
                     <th className="p-3.5 text-center">Questions</th>
@@ -383,19 +464,19 @@ const TestResult = () => {
                     <th className="p-3.5 rounded-r-xl text-center">Priority</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {(feedback?.chapterWiseAnalysis || attempt.chapterWiseAccuracy || []).map((c, i) => (
-                    <tr key={i} className="hover:bg-slate-900/40">
-                      <td className="p-3.5 font-bold text-white">{c.chapterName}</td>
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-3.5 font-bold text-slate-900">{c.chapterName}</td>
                       <td className="p-3.5 text-center">{c.questionsCount || c.attempted || 0}</td>
-                      <td className="p-3.5 text-center text-emerald-400 font-bold">{c.correct}</td>
-                      <td className="p-3.5 text-center text-rose-400 font-bold">{c.wrong}</td>
-                      <td className="p-3.5 text-center font-extrabold text-indigo-300">{c.accuracy}%</td>
-                      <td className="p-3.5 text-center">{c.learningGap || (c.accuracy < 50 ? 'High' : 'Low')}</td>
-                      <td className="p-3.5 text-center text-amber-300">{c.estimatedStudyHours || 4} hrs</td>
+                      <td className="p-3.5 text-center text-emerald-700 font-extrabold">{c.correct}</td>
+                      <td className="p-3.5 text-center text-rose-700 font-extrabold">{c.wrong}</td>
+                      <td className="p-3.5 text-center font-black text-emerald-800">{c.accuracy}%</td>
+                      <td className="p-3.5 text-center font-bold">{c.learningGap || (c.accuracy < 50 ? 'High' : 'Low')}</td>
+                      <td className="p-3.5 text-center text-amber-700 font-black">{c.estimatedStudyHours || 4} hrs</td>
                       <td className="p-3.5 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          (c.priority === 'Immediate' || c.priority === 'High') ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                          (c.priority === 'Immediate' || c.priority === 'High') ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                         }`}>
                           {c.priority || 'Medium'}
                         </span>
@@ -408,23 +489,23 @@ const TestResult = () => {
           </div>
 
           {/* DIFFICULTY ANALYSIS */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-              <Flame className="w-5 h-5 text-amber-400" />
-              <h3 className="text-base font-bold text-white">Difficulty Analysis</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-200">
+              <Flame className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-black text-slate-900">Difficulty Analysis</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {(feedback?.difficultyWiseAnalysis || attempt.difficultyWiseAccuracy || []).map((d, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-white text-sm">{d.difficulty} Difficulty</span>
-                    <span className="text-xs font-bold text-indigo-400">{d.accuracy}% Acc</span>
+                    <span className="font-extrabold text-slate-900 text-sm">{d.difficulty} Difficulty</span>
+                    <span className="text-xs font-black text-emerald-700">{d.accuracy}% Acc</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${d.accuracy}%` }} />
+                  <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="h-full bg-emerald-600 transition-all duration-300 rounded-full" style={{ width: `${d.accuracy}%` }} />
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Attempted: <strong className="text-slate-200">{d.attempted}</strong> | Correct: <strong className="text-emerald-400">{d.correct}</strong> | Wrong: <strong className="text-rose-400">{d.wrong}</strong>
+                  <p className="text-[11px] text-slate-600 font-medium">
+                    Attempted: <strong className="text-slate-900">{d.attempted}</strong> | Correct: <strong className="text-emerald-700">{d.correct}</strong> | Wrong: <strong className="text-rose-700">{d.wrong}</strong>
                   </p>
                 </div>
               ))}
@@ -432,67 +513,67 @@ const TestResult = () => {
           </div>
 
           {/* AI LEARNING GAP DETECTOR */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-              <Activity className="w-5 h-5 text-rose-400" />
-              <h3 className="text-base font-bold text-white">AI Learning Gap Detector</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-200">
+              <Activity className="w-5 h-5 text-rose-500" />
+              <h3 className="text-base font-black text-slate-900">AI Learning Gap Detector</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-rose-400 block mb-1">Repeated Mistakes</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.repeatedMistakes?.[0] || 'Option distractor traps'}</p>
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200">
+                <span className="font-extrabold text-rose-800 block mb-1">Repeated Mistakes</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.repeatedMistakes?.[0] || 'Option distractor traps'}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-amber-400 block mb-1">Concept Weakness</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.conceptWeakness?.[0] || 'Core theoretical principles'}</p>
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                <span className="font-extrabold text-amber-800 block mb-1">Concept Weakness</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.conceptWeakness?.[0] || 'Core theoretical principles'}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-purple-400 block mb-1">Calculation & Numerical</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.calculationErrors?.[0] || 'Numerical steps precision'}</p>
+              <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200">
+                <span className="font-extrabold text-violet-800 block mb-1">Calculation & Numerical</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.calculationErrors?.[0] || 'Numerical steps precision'}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-indigo-400 block mb-1">Memory & Recall</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.memoryErrors?.[0] || 'Formula recall under time pressure'}</p>
+              <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+                <span className="font-extrabold text-indigo-800 block mb-1">Memory & Recall</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.memoryErrors?.[0] || 'Formula recall under time pressure'}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-emerald-400 block mb-1">Application Skills</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.applicationWeakness?.[0] || 'Problem solving steps'}</p>
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <span className="font-extrabold text-emerald-800 block mb-1">Application Skills</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.applicationWeakness?.[0] || 'Problem solving steps'}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <span className="font-bold text-cyan-400 block mb-1">Time Management</span>
-                <p className="text-slate-300">{feedback?.aiLearningGaps?.timeManagementIssues?.[0] || 'Question pacing & speed'}</p>
+              <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200">
+                <span className="font-extrabold text-sky-800 block mb-1">Time Management</span>
+                <p className="text-slate-700 font-medium">{feedback?.aiLearningGaps?.timeManagementIssues?.[0] || 'Question pacing & speed'}</p>
               </div>
             </div>
           </div>
 
           {/* ONE CLICK RECOVERY PLAN */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
               <div className="flex items-center space-x-3">
-                <Compass className="w-6 h-6 text-emerald-400" />
+                <Compass className="w-6 h-6 text-emerald-600" />
                 <div>
-                  <h3 className="text-lg font-bold text-white">One-Click AI Recovery Plan</h3>
-                  <p className="text-xs text-slate-400">Step-by-step roadmap to eliminate learning gaps</p>
+                  <h3 className="text-lg font-black text-slate-900">One-Click AI Recovery Plan</h3>
+                  <p className="text-xs text-slate-600 font-medium">Step-by-step roadmap to eliminate learning gaps</p>
                 </div>
               </div>
 
               {/* Tabs */}
-              <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
                 <button
                   onClick={() => setRecoveryTab('7day')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '7day' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '7day' ? 'bg-emerald-600 text-white shadow-soft-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   7 Day Plan
                 </button>
                 <button
                   onClick={() => setRecoveryTab('15day')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '15day' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '15day' ? 'bg-emerald-600 text-white shadow-soft-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   15 Day Plan
                 </button>
                 <button
                   onClick={() => setRecoveryTab('30day')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '30day' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${recoveryTab === '30day' ? 'bg-emerald-600 text-white shadow-soft-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   30 Day Plan
                 </button>
@@ -505,13 +586,13 @@ const TestResult = () => {
                 { day: 1, focus: "Concept Rebuild", hours: 3, tasks: ["Review incorrect questions", "Practice 15 drills"] },
                 { day: 2, focus: "Topic Drills", hours: 3, tasks: ["Solve targeted problems"] }
               ]).map((d, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between text-emerald-400 font-bold">
+                <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-emerald-800 font-bold">
                     <span>Day {d.day || i + 1}</span>
-                    <span className="text-slate-400">{d.hours || 3} hrs</span>
+                    <span className="text-slate-500 font-semibold">{d.hours || 3} hrs</span>
                   </div>
-                  <h4 className="font-extrabold text-white text-sm">{d.focus}</h4>
-                  <ul className="space-y-1 text-slate-400 text-[11px]">
+                  <h4 className="font-black text-slate-900 text-sm">{d.focus}</h4>
+                  <ul className="space-y-1 text-slate-600 text-[11px] font-medium">
                     {(d.tasks || []).map((t, idx) => (
                       <li key={idx}>• {t}</li>
                     ))}
@@ -522,22 +603,22 @@ const TestResult = () => {
 
             {/* Extras: Recommended Videos & Notes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 text-xs">
-                <span className="font-bold text-purple-400 flex items-center mb-2">
-                  <Video className="w-4 h-4 mr-2" /> Recommended Conceptual Videos
+              <div className="p-4 rounded-2xl bg-violet-50 border border-violet-200 text-xs">
+                <span className="font-extrabold text-violet-800 flex items-center mb-2">
+                  <Video className="w-4 h-4 mr-2 text-violet-600" /> Recommended Conceptual Videos
                 </span>
-                <ul className="space-y-1 text-slate-300">
+                <ul className="space-y-1 text-slate-700 font-medium">
                   {(feedback?.recoveryPlan?.recommendedVideos || [`${mockTest.subject?.name} Foundational Lecture`]).map((v, i) => (
                     <li key={i}>▶ {v}</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 text-xs">
-                <span className="font-bold text-indigo-400 flex items-center mb-2">
-                  <FileText className="w-4 h-4 mr-2" /> Recommended Notes & Revision Sheets
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs">
+                <span className="font-extrabold text-emerald-800 flex items-center mb-2">
+                  <FileText className="w-4 h-4 mr-2 text-emerald-600" /> Recommended Notes & Revision Sheets
                 </span>
-                <ul className="space-y-1 text-slate-300">
+                <ul className="space-y-1 text-slate-700 font-medium">
                   {(feedback?.recoveryPlan?.recommendedNotes || [`${mockTest.subject?.name} Formula Flashcards`]).map((n, i) => (
                     <li key={i}>📄 {n}</li>
                   ))}
@@ -547,51 +628,53 @@ const TestResult = () => {
           </div>
 
           {/* AI STUDY PLANNER */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-4">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-              <Calendar className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-base font-bold text-white">AI Study Planner Recommendations</h3>
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+            <div className="flex items-center space-x-3 pb-3 border-b border-slate-200">
+              <Calendar className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-base font-black text-slate-900">AI Study Planner Recommendations</h3>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-center text-xs">
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Daily Study</span>
-                <span className="text-base font-extrabold text-indigo-400 mt-1 block">{feedback?.studyPlanner?.dailyStudyHours || 4} hrs</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Daily Study</span>
+                <span className="text-base font-black text-emerald-700 mt-1 block">{feedback?.studyPlanner?.dailyStudyHours || 4} hrs</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Revision</span>
-                <span className="text-base font-extrabold text-purple-400 mt-1 block">{feedback?.studyPlanner?.revisionHours || 1.5} hrs</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Revision</span>
+                <span className="text-base font-black text-violet-700 mt-1 block">{feedback?.studyPlanner?.revisionHours || 1.5} hrs</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Practice</span>
-                <span className="text-base font-extrabold text-emerald-400 mt-1 block">{feedback?.studyPlanner?.practiceHours || 2} hrs</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Practice</span>
+                <span className="text-base font-black text-teal-700 mt-1 block">{feedback?.studyPlanner?.practiceHours || 2} hrs</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Mock Frequency</span>
-                <span className="text-base font-extrabold text-amber-400 mt-1 block">{feedback?.studyPlanner?.mockTestFrequency || '2 / week'}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Mock Frequency</span>
+                <span className="text-base font-black text-amber-700 mt-1 block">{feedback?.studyPlanner?.mockTestFrequency || '2 / week'}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Sleep</span>
-                <span className="text-base font-extrabold text-cyan-400 mt-1 block">{feedback?.studyPlanner?.sleepRecommendation || '7-8 hrs'}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Sleep</span>
+                <span className="text-base font-black text-sky-700 mt-1 block">{feedback?.studyPlanner?.sleepRecommendation || '7-8 hrs'}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Breaks</span>
-                <span className="text-base font-extrabold text-rose-300 mt-1 block">{feedback?.studyPlanner?.breakSchedule || '10 min / hr'}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Breaks</span>
+                <span className="text-base font-black text-rose-700 mt-1 block">{feedback?.studyPlanner?.breakSchedule || '10 min / hr'}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 block font-semibold">Target Completion</span>
-                <span className="text-base font-extrabold text-white mt-1 block">{feedback?.studyPlanner?.targetCompletionDate || '30 Days'}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-slate-500 block font-semibold">Target Completion</span>
+                <span className="text-base font-black text-slate-900 mt-1 block">{feedback?.studyPlanner?.targetCompletionDate || '30 Days'}</span>
               </div>
             </div>
           </div>
 
           {/* INTERACTIVE AI MENTOR CHAT BOX */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/30 space-y-6 shadow-glow-indigo">
-            <div className="flex items-center space-x-3 pb-4 border-b border-slate-800">
-              <MessageSquare className="w-6 h-6 text-indigo-400" />
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-200 bg-white space-y-6 shadow-soft-md">
+            <div className="flex items-center space-x-3 pb-4 border-b border-slate-200">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-glow-emerald">
+                <MessageSquare className="w-5 h-5" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Ask AI Mentor About Your Test</h3>
-                <p className="text-xs text-indigo-300">Answers are generated strictly using your verified MongoDB student data</p>
+                <h3 className="text-lg font-black text-slate-900">Ask AI Mentor About Your Test</h3>
+                <p className="text-xs text-slate-600 font-medium">Answers are generated strictly using your verified MongoDB student data</p>
               </div>
             </div>
 
@@ -608,7 +691,7 @@ const TestResult = () => {
                   key={idx}
                   type="button"
                   onClick={() => handleAskMentor(pill)}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold hover:bg-indigo-500/20 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 hover:border-emerald-300 transition-all"
                 >
                   {pill}
                 </button>
@@ -616,18 +699,18 @@ const TestResult = () => {
             </div>
 
             {/* Chat Messages */}
-            <div className="max-h-80 overflow-y-auto space-y-3 p-4 bg-slate-950/60 rounded-2xl border border-slate-800">
+            <div className="max-h-80 overflow-y-auto space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
               {mentorChatHistory.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-4">
+                <p className="text-xs text-slate-500 text-center py-4 font-medium">
                   Ask any question about your test results, weak topics, or study plan above!
                 </p>
               ) : (
                 mentorChatHistory.map((msg, i) => (
                   <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`p-3.5 rounded-2xl max-w-2xl text-xs leading-relaxed ${
+                    <div className={`p-3.5 rounded-2xl max-w-2xl text-xs leading-relaxed font-medium ${
                       msg.sender === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-none'
-                        : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-none'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-br-none shadow-soft-sm'
+                        : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-soft-sm'
                     }`}>
                       {msg.text}
                     </div>
@@ -636,8 +719,8 @@ const TestResult = () => {
               )}
               {mentorLoading && (
                 <div className="flex justify-start">
-                  <div className="p-3 rounded-2xl bg-slate-900 text-slate-400 border border-slate-800 text-xs flex items-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                  <div className="p-3 rounded-2xl bg-white text-slate-600 border border-slate-200 text-xs flex items-center space-x-2 shadow-soft-sm">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                     <span>AI Mentor is analyzing your MongoDB data...</span>
                   </div>
                 </div>
@@ -652,12 +735,12 @@ const TestResult = () => {
                 onChange={(e) => setMentorInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAskMentor()}
                 placeholder="Ask AI Mentor anything about your test..."
-                className="flex-1 px-4 py-3 rounded-xl glass-input text-xs font-medium bg-slate-900 text-slate-100 border border-slate-800 focus:border-indigo-500 outline-none"
+                className="flex-1 px-4 py-3 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
               />
               <button
                 onClick={() => handleAskMentor()}
                 disabled={mentorLoading || !mentorInput.trim()}
-                className="px-5 py-3 rounded-xl text-xs font-extrabold text-white gradient-bg flex items-center space-x-2 disabled:opacity-50"
+                className="px-5 py-3 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-glow-emerald hover:opacity-95 flex items-center space-x-2 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
                 <span>Ask</span>
@@ -666,8 +749,8 @@ const TestResult = () => {
           </div>
 
           {/* DETAILED QUESTION-BY-QUESTION REVIEW */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
-            <h3 className="text-lg font-bold text-white pb-3 border-b border-slate-800">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-6">
+            <h3 className="text-lg font-black text-slate-900 pb-3 border-b border-slate-200">
               Detailed Question-by-Question Review
             </h3>
 
@@ -680,30 +763,30 @@ const TestResult = () => {
                 const isExpanded = expandedQuestion === idx;
 
                 return (
-                  <div key={idx} className="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden">
+                  <div key={idx} className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-soft-sm">
                     <div
                       onClick={() => setExpandedQuestion(isExpanded ? null : idx)}
-                      className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-900 transition-all"
+                      className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all"
                     >
                       <div className="flex items-center space-x-3">
                         {isCorrect ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         ) : isSkipped ? (
-                          <MinusCircle className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                          <MinusCircle className="w-5 h-5 text-slate-400 flex-shrink-0" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+                          <XCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
                         )}
                         <div>
-                          <span className="text-xs font-bold text-slate-400 mr-2">Q{idx + 1}.</span>
-                          <span className="text-sm font-semibold text-white truncate max-w-xs sm:max-w-xl">
+                          <span className="text-xs font-black text-slate-500 mr-2">Q{idx + 1}.</span>
+                          <span className="text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-xl">
                             {q.questionText}
                           </span>
                         </div>
                       </div>
 
                       <div className="flex items-center space-x-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          isCorrect ? 'bg-emerald-500/20 text-emerald-400' : isSkipped ? 'bg-slate-800 text-slate-400' : 'bg-rose-500/20 text-rose-400'
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                          isCorrect ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : isSkipped ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-rose-50 text-rose-800 border-rose-200'
                         }`}>
                           {isCorrect ? 'Correct' : isSkipped ? 'Skipped' : 'Incorrect'}
                         </span>
@@ -713,9 +796,9 @@ const TestResult = () => {
 
                     {/* Expanded Detail */}
                     {isExpanded && (
-                      <div className="p-5 border-t border-slate-800/80 bg-slate-950/80 space-y-4 text-xs">
+                      <div className="p-5 border-t border-slate-200 bg-slate-50/70 space-y-4 text-xs">
                         <div className="space-y-2">
-                          <p className="font-bold text-white text-sm">{q.questionText}</p>
+                          <p className="font-bold text-slate-900 text-sm">{q.questionText}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                             {q.options.map((opt, oIdx) => {
                               const isThisSelected = selectedIdx === oIdx;
@@ -724,17 +807,17 @@ const TestResult = () => {
                               return (
                                 <div
                                   key={oIdx}
-                                  className={`p-3 rounded-xl border text-xs font-medium flex items-center justify-between ${
+                                  className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between ${
                                     isThisCorrect
-                                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                                      ? 'bg-emerald-100 border-emerald-400 text-emerald-950 font-black'
                                       : isThisSelected
-                                      ? 'bg-rose-500/10 border-rose-500/40 text-rose-300'
-                                      : 'bg-slate-900 border-slate-800 text-slate-400'
+                                      ? 'bg-rose-100 border-rose-400 text-rose-950 font-black'
+                                      : 'bg-white border-slate-200 text-slate-700'
                                   }`}
                                 >
                                   <span>{String.fromCharCode(65 + oIdx)}. {opt}</span>
-                                  {isThisCorrect && <span className="text-[10px] font-bold uppercase text-emerald-400">Correct Answer</span>}
-                                  {isThisSelected && !isThisCorrect && <span className="text-[10px] font-bold uppercase text-rose-400">Your Selection</span>}
+                                  {isThisCorrect && <span className="text-[10px] font-black uppercase text-emerald-800">Correct Answer</span>}
+                                  {isThisSelected && !isThisCorrect && <span className="text-[10px] font-black uppercase text-rose-800">Your Selection</span>}
                                 </div>
                               );
                             })}
@@ -742,9 +825,9 @@ const TestResult = () => {
                         </div>
 
                         {/* Explanation Box */}
-                        <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/20 space-y-1">
-                          <span className="font-bold text-indigo-400 block uppercase tracking-wider text-[10px]">Detailed Explanation</span>
-                          <p className="text-slate-300 leading-relaxed text-xs">{q.explanation}</p>
+                        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
+                          <span className="font-black text-emerald-800 block uppercase tracking-wider text-[10px]">Detailed Explanation</span>
+                          <p className="text-slate-800 leading-relaxed text-xs font-medium">{q.explanation}</p>
                         </div>
                       </div>
                     )}
@@ -756,6 +839,20 @@ const TestResult = () => {
 
         </main>
       </div>
+
+      {/* Gemini 3.7 Flash Precision Targeted Drill Test Modal */}
+      <DrillTestModal
+        isOpen={drillModalOpen}
+        onClose={() => setDrillModalOpen(false)}
+        subjectName={mockTest.subject?.name || 'Mathematics'}
+        weakTopics={activeDrillTopics.length > 0 ? activeDrillTopics : extractedWeakTopics}
+        score={attempt.score !== undefined ? attempt.score : attempt.correctCount}
+        totalMarks={attempt.totalQuestions || questions.length || 10}
+        percentage={attempt.accuracy}
+        feedback={typeof feedback?.motivationalFeedback === 'string' ? feedback.motivationalFeedback : (feedback?.mistakeAnalysis || '')}
+        incorrectQuestions={incorrectQuestionsList}
+        sourceType="scorecard"
+      />
 
       <Footer />
     </div>

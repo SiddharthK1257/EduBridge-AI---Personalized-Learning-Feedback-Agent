@@ -823,11 +823,180 @@ const getResultById = async (req, res) => {
   }
 };
 
+// @desc    Generate a precision Adaptive Drill Test targeted at student weak topics
+// @route   POST /api/tests/drill/generate
+// @access  Private
+const generateDrillTest = async (req, res) => {
+  try {
+    const {
+      subjectName,
+      subjectId,
+      weakTopics = [],
+      score,
+      totalMarks,
+      percentage,
+      feedback,
+      incorrectQuestions = [],
+      difficulty = 'Adaptive',
+      questionCount = 5,
+      previousDrillPerformance = null,
+      sourceType = 'scorecard'
+    } = req.body;
+
+    const user = req.user;
+
+    // Resolve subject name safely
+    let resolvedSubjectName = typeof subjectName === 'string'
+      ? subjectName.trim()
+      : (subjectName?.name || subjectName?.subjectName || '');
+      
+    if (!resolvedSubjectName && subjectId) {
+      try {
+        const sub = await Subject.findById(subjectId);
+        if (sub) resolvedSubjectName = sub.name;
+      } catch (e) {}
+    }
+    if (!resolvedSubjectName || resolvedSubjectName.length === 0) {
+      resolvedSubjectName = 'General Subject';
+    }
+
+    // Safely format weak topics
+    const rawTopics = Array.isArray(weakTopics) ? weakTopics : (weakTopics ? [weakTopics] : []);
+    const formattedTopics = rawTopics
+      .map(t => {
+        if (typeof t === 'string') return t.trim();
+        if (t && typeof t === 'object') return (t.topicName || t.name || t.chapterName || '').trim();
+        return String(t || '').trim();
+      })
+      .filter(t => t && t.length > 0);
+
+    // Call Gemini Drill Engine
+    const drillTest = await geminiService.generateDrillTestQuestions({
+      subjectName: resolvedSubjectName,
+      weakTopics: formattedTopics.length > 0 ? formattedTopics : [`${resolvedSubjectName} Core Problem Areas`],
+      score,
+      totalMarks,
+      percentage,
+      feedback: typeof feedback === 'string' ? feedback : JSON.stringify(feedback || ''),
+      incorrectQuestions,
+      difficulty,
+      previousDrillPerformance,
+      questionCount: parseInt(questionCount) || 5,
+      exam: user?.examTarget || 'JEE Main',
+      grade: user?.gradeClass || 'Class 12'
+    });
+
+    return res.json({
+      success: true,
+      message: 'Drill Test generated successfully',
+      drillTest
+    });
+  } catch (err) {
+    console.error('Error generating drill test:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to generate Drill Test'
+    });
+  }
+};
+
+// @desc    Submit Drill Test answers, evaluate topic mastery & generate adaptive follow-up
+// @route   POST /api/tests/drill/submit
+// @access  Private
+const submitDrillTest = async (req, res) => {
+  try {
+    const {
+      drillTest,
+      userAnswers = [],
+      previousPerformance = null
+    } = req.body;
+
+    if (!drillTest || !drillTest.questions) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid drill test data provided for evaluation'
+      });
+    }
+
+    const userId = req.user?._id;
+
+    // Evaluate results with Gemini Adaptive Drill Evaluator
+    const evaluation = await geminiService.evaluateDrillTestResult({
+      drillTest,
+      userAnswers,
+      previousPerformance
+    });
+
+    // Update student progress in MongoDB if user is authenticated
+    if (userId) {
+      try {
+        let progress = await Progress.findOne({ user: userId });
+      if (progress) {
+        progress.totalTestsTaken += 1;
+        progress.totalQuestionsAttempted += evaluation.totalQuestions;
+        progress.totalCorrect += evaluation.correctCount;
+        progress.totalWrong += evaluation.wrongCount;
+        if (progress.totalQuestionsAttempted > 0) {
+          progress.overallAccuracy = Math.round((progress.totalCorrect / progress.totalQuestionsAttempted) * 100);
+        }
+
+        // Update weak / strong topics based on drill performance
+        evaluation.topicPerformance.forEach(tp => {
+          if (tp.accuracy >= 75) {
+            // Remove from weak if present, add to strong
+            progress.weakTopics = progress.weakTopics.filter(w => w.topicName !== tp.topicName);
+            const exists = progress.strongTopics.find(s => s.topicName === tp.topicName);
+            if (exists) {
+              exists.accuracy = tp.accuracy;
+            } else {
+              progress.strongTopics.push({ topicName: tp.topicName, accuracy: tp.accuracy });
+            }
+          } else {
+            const exists = progress.weakTopics.find(w => w.topicName === tp.topicName);
+            if (exists) {
+              exists.accuracy = tp.accuracy;
+            } else {
+              progress.weakTopics.push({ topicName: tp.topicName, accuracy: tp.accuracy });
+            }
+          }
+        });
+
+        await progress.save();
+      }
+
+      // Create a motivational Notification
+      await Notification.create({
+        user: userId,
+        title: `🎯 Drill Test Completed: ${drillTest.subject}`,
+        message: `You scored ${evaluation.score}/${evaluation.totalQuestions} (${evaluation.accuracy}% accuracy) in ${drillTest.title || 'your drill test'}.`,
+        type: evaluation.accuracy >= 80 ? 'Mastery' : 'Alert'
+      });
+    } catch (dbErr) {
+      console.warn('Progress update warning during drill submit:', dbErr.message);
+    }
+  }
+
+  return res.json({
+      success: true,
+      message: 'Drill Test submitted and analyzed successfully',
+      evaluation
+    });
+  } catch (err) {
+    console.error('Error submitting drill test:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to submit Drill Test'
+    });
+  }
+};
+
 module.exports = {
   generateTest,
   getTestById,
   submitTest,
   chatWithTestMentorController,
   getUserTestHistory,
-  getResultById
+  getResultById,
+  generateDrillTest,
+  submitDrillTest
 };

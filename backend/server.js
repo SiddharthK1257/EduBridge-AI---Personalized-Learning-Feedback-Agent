@@ -41,6 +41,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root route handler for browser convenience
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>EduBridge AI Server</title></head>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #f8fafc; color: #0f172a;">
+        <h1 style="color: #059669;">🚀 EduBridge AI Backend API is Online</h1>
+        <p>The frontend application is running on port 3000.</p>
+        <p><a href="http://localhost:3000" style="display: inline-block; padding: 12px 24px; background: #059669; color: white; border-radius: 8px; text-decoration: none; font-weight: bold;">Open EduBridge AI Web Application →</a></p>
+      </body>
+    </html>
+  `);
+});
+
 const path = require('path');
 
 // Static uploads folder

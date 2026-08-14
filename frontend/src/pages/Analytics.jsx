@@ -46,7 +46,7 @@ const Analytics = () => {
 
   if (loading || !analyticsData) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner label="Compiling real MongoDB analytics & Recharts visualizations..." />
@@ -59,9 +59,9 @@ const Analytics = () => {
 
   // Pie chart data for answer breakdown
   const pieData = [
-    { name: 'Correct', value: progress?.totalCorrect || 0, color: '#10b981' },
-    { name: 'Wrong', value: progress?.totalWrong || 0, color: '#f43f5e' },
-    { name: 'Skipped', value: Math.max(0, (progress?.totalQuestionsAttempted || 0) - (progress?.totalCorrect || 0) - (progress?.totalWrong || 0)), color: '#64748b' }
+    { name: 'Correct', value: progress?.totalCorrect || 0, color: '#059669' },
+    { name: 'Wrong', value: progress?.totalWrong || 0, color: '#e11d48' },
+    { name: 'Skipped', value: Math.max(0, (progress?.totalQuestionsAttempted || 0) - (progress?.totalCorrect || 0) - (progress?.totalWrong || 0)), color: '#94a3b8' }
   ];
 
   // Radar chart data for topic mastery
@@ -81,7 +81,7 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 selection:bg-indigo-500">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-emerald-500">
       <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
@@ -90,17 +90,17 @@ const Analytics = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden space-y-8">
           
           {/* Header */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-widest mb-1">
+            <div className="flex items-center space-x-2 text-emerald-700 font-bold text-xs uppercase tracking-widest mb-1">
               <Sparkles className="w-4 h-4" />
               <span>Real Database Visual Analytics Hub</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Learning Analytics & <span className="gradient-text">Progress Charts</span>
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1 font-medium">
               Every chart is computed directly from MongoDB test attempt history and Gemini diagnostic scores.
             </p>
           </div>
@@ -109,91 +109,91 @@ const Analytics = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {/* 1. Learning Curve (Line Chart) */}
-            <div className="glass-card p-6 rounded-3xl border border-slate-800">
+            <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center">
-                    <TrendingUp className="w-5 h-5 mr-2 text-indigo-400" />
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-emerald-600" />
                     Learning Curve (Accuracy Trend)
                   </h3>
-                  <p className="text-xs text-slate-400">Accuracy % per test attempt</p>
+                  <p className="text-xs text-slate-500 font-medium">Accuracy % per test attempt</p>
                 </div>
               </div>
 
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={progressTrend || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f293d" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
                     <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', borderColor: '#1f293d', borderRadius: '12px' }} />
-                    <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', r: 5 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }} />
+                    <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#059669" strokeWidth={3} dot={{ fill: '#059669', r: 5 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* 2. Topic Mastery Radar Chart */}
-            <div className="glass-card p-6 rounded-3xl border border-slate-800">
+            <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center">
-                    <RadarIcon className="w-5 h-5 mr-2 text-purple-400" />
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center">
+                    <RadarIcon className="w-5 h-5 mr-2 text-violet-600" />
                     Topic Mastery Radar
                   </h3>
-                  <p className="text-xs text-slate-400">Multi-dimensional topic skill balance</p>
+                  <p className="text-xs text-slate-500 font-medium">Multi-dimensional topic skill balance</p>
                 </div>
               </div>
 
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={displayRadarData}>
-                    <PolarGrid stroke="#1f293d" />
-                    <PolarAngleAxis dataKey="subject" stroke="#94a3b8" fontSize={11} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#475569" />
-                    <Radar name="Mastery" dataKey="A" stroke="#a855f7" fill="#a855f7" fillOpacity={0.4} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', borderColor: '#1f293d', borderRadius: '12px' }} />
+                    <PolarGrid stroke="#cbd5e1" />
+                    <PolarAngleAxis dataKey="subject" stroke="#64748b" fontSize={11} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#94a3b8" />
+                    <Radar name="Mastery" dataKey="A" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.3} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* 3. Bar Chart - Test Score & Gap Score */}
-            <div className="glass-card p-6 rounded-3xl border border-slate-800">
+            <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center">
-                    <BarChart3 className="w-5 h-5 mr-2 text-emerald-400" />
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center">
+                    <BarChart3 className="w-5 h-5 mr-2 text-teal-600" />
                     Score vs Learning Gap Comparison
                   </h3>
-                  <p className="text-xs text-slate-400">Comparison across recent tests</p>
+                  <p className="text-xs text-slate-500 font-medium">Comparison across recent tests</p>
                 </div>
               </div>
 
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={progressTrend || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f293d" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
                     <YAxis stroke="#64748b" fontSize={12} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', borderColor: '#1f293d', borderRadius: '12px' }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }} />
                     <Legend />
-                    <Bar dataKey="score" name="Test Score" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="learningGapScore" name="Gap Index" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="score" name="Test Score" fill="#059669" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="learningGapScore" name="Gap Index" fill="#e11d48" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* 4. Pie Chart - Answer Precision Breakdown */}
-            <div className="glass-card p-6 rounded-3xl border border-slate-800">
+            <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center">
-                    <PieIcon className="w-5 h-5 mr-2 text-amber-400" />
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center">
+                    <PieIcon className="w-5 h-5 mr-2 text-amber-500" />
                     Answer Precision Distribution
                   </h3>
-                  <p className="text-xs text-slate-400">Correct, Wrong, and Skipped questions</p>
+                  <p className="text-xs text-slate-500 font-medium">Correct, Wrong, and Skipped questions</p>
                 </div>
               </div>
 
@@ -213,7 +213,7 @@ const Analytics = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#111827', borderColor: '#1f293d', borderRadius: '12px' }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>

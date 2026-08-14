@@ -39,7 +39,10 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full glass-panel border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-soft-sm">
+      {/* Top Radiant Accent Bar */}
+      <div className="h-1 w-full gradient-bg-rainbow" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
@@ -48,26 +51,26 @@ const Navbar = ({ toggleSidebar }) => {
             {user && (
               <button 
                 onClick={toggleSidebar}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 md:hidden transition-colors"
+                className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 md:hidden transition-colors border border-transparent hover:border-slate-200"
                 aria-label="Toggle Sidebar"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
             
-            <Link to="/" className="flex items-center space-x-2 group">
-              <div className="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center shadow-glow-indigo group-hover:scale-105 transition-transform duration-200">
+            <Link to="/" className="flex items-center space-x-2.5 group">
+              <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-glow-emerald group-hover:scale-105 transition-transform duration-200">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-white font-sans">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-sans">
                 EduBridge<span className="gradient-text">.AI</span>
               </span>
             </Link>
 
             {user && (
-              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                <Compass className="w-3.5 h-3.5 mr-1" />
-                {user.examTarget || 'JEE Main'} ({user.gradeClass || 'Class 12'})
+              <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 border border-emerald-200 shadow-soft-sm">
+                <Compass className="w-3.5 h-3.5 mr-1.5 text-emerald-600 animate-spin-slow" />
+                {user.examTarget || 'JEE Main'} • {user.gradeClass || 'Class 12'}
               </span>
             )}
           </div>
@@ -79,7 +82,7 @@ const Navbar = ({ toggleSidebar }) => {
                 {/* Notifications Bell */}
                 <Link 
                   to="/notifications" 
-                  className="relative p-2 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-slate-800/50 transition-colors"
+                  className="relative p-2 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-slate-100 transition-colors"
                   title="Notifications"
                 >
                   <Bell className="w-5 h-5" />
@@ -94,47 +97,47 @@ const Navbar = ({ toggleSidebar }) => {
                 <div className="relative">
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center space-x-2.5 p-1.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all"
+                    className="flex items-center space-x-2.5 p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    <span className="hidden md:inline-block text-sm font-medium text-slate-200">
+                    <span className="hidden md:inline-block text-sm font-semibold text-slate-800">
                       {user.name}
                     </span>
                   </button>
 
                   {dropdownOpen && (
                     <div 
-                      className="absolute right-0 mt-2 w-56 rounded-2xl glass-card border border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                      className="absolute right-0 mt-2 w-56 rounded-2xl glass-card border border-slate-200 shadow-soft-md py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 bg-white"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      <div className="px-4 py-2 border-b border-slate-800/80">
-                        <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                      <div className="px-4 py-2 border-b border-slate-100">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
                       </div>
 
                       <Link 
                         to="/dashboard" 
-                        className="flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-indigo-600/10 hover:text-indigo-400 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
                       >
-                        <BookOpen className="w-4 h-4 mr-2.5" />
+                        <BookOpen className="w-4 h-4 mr-2.5 text-emerald-600" />
                         Student Dashboard
                       </Link>
 
                       {isAdmin && (
                         <Link 
                           to="/admin" 
-                          className="flex items-center px-4 py-2 text-sm text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          className="flex items-center px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
                         >
-                          <ShieldCheck className="w-4 h-4 mr-2.5" />
+                          <ShieldCheck className="w-4 h-4 mr-2.5 text-amber-600" />
                           Admin Console
                         </Link>
                       )}
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors border-t border-slate-800/80 mt-1"
+                        className="w-full flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-100 mt-1"
                       >
                         <LogOut className="w-4 h-4 mr-2.5" />
                         Log Out
@@ -147,13 +150,13 @@ const Navbar = ({ toggleSidebar }) => {
               <div className="flex items-center space-x-3">
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                 >
                   Log In
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white gradient-bg hover:opacity-90 transition-opacity shadow-glow-indigo"
+                  className="px-4 py-2 rounded-xl text-sm font-bold text-white gradient-bg hover:opacity-95 transition-opacity shadow-glow-emerald"
                 >
                   Get Started Free
                 </Link>
@@ -163,7 +166,7 @@ const Navbar = ({ toggleSidebar }) => {
 
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
 

@@ -51,28 +51,28 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b0f19] px-4 py-12 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-lg relative z-10">
         
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-4 group">
-            <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-glow-indigo">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center shadow-glow-emerald">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white font-sans">
+            <span className="text-2xl font-black text-slate-900 font-sans">
               EduBridge<span className="gradient-text">.AI</span>
             </span>
           </Link>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Create Student Account</h2>
-          <p className="text-sm text-slate-400 mt-1">Start getting personalized AI diagnostic learning feedback</p>
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create Student Account</h2>
+          <p className="text-sm text-slate-600 mt-1 font-medium">Start getting personalized AI diagnostic learning feedback</p>
         </div>
 
-        <div className="glass-card p-8 rounded-3xl border border-slate-800 shadow-2xl">
+        <div className="glass-card p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-md">
           
           {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center space-x-3 text-rose-400 text-sm">
+            <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center space-x-3 text-rose-800 text-sm font-medium">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -81,11 +81,11 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Full Name
               </label>
               <div className="relative">
-                <User className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <User className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   name="name"
@@ -93,17 +93,17 @@ const Register = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Alex Sharma"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Mail className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   name="email"
@@ -111,21 +111,21 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="alex@example.com"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Target Exam
                 </label>
                 <select
                   name="examTarget"
                   value={formData.examTarget}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none bg-slate-900 text-slate-200"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="JEE Main">JEE Main</option>
                   <option value="JEE Advanced">JEE Advanced</option>
@@ -145,14 +145,14 @@ const Register = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Class / Grade
                 </label>
                 <select
                   name="gradeClass"
                   value={formData.gradeClass}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none bg-slate-900 text-slate-200"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="Class 9">Class 9</option>
                   <option value="Class 10">Class 10</option>
@@ -165,11 +165,11 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Lock className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="password"
                   name="password"
@@ -177,17 +177,17 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Lock className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="password"
                   name="confirmPassword"
@@ -195,7 +195,7 @@ const Register = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-medium focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -203,11 +203,11 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white gradient-bg shadow-glow-indigo hover:opacity-90 transition-all flex items-center justify-center space-x-2 mt-2 disabled:opacity-50"
+              className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-violet-600 shadow-glow-emerald hover:opacity-95 transition-all flex items-center justify-center space-x-2 mt-2 disabled:opacity-50"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
                   <span>Creating Account...</span>
                 </>
               ) : (
@@ -220,9 +220,9 @@ const Register = () => {
 
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          <div className="mt-6 text-center text-xs text-slate-600 font-medium">
             Already registered?{' '}
-            <Link to="/login" className="text-indigo-400 font-semibold hover:underline">
+            <Link to="/login" className="text-emerald-700 font-extrabold hover:underline">
               Log in here
             </Link>
           </div>

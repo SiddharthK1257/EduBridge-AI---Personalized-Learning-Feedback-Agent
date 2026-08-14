@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+  const trimmed = envUrl.replace(/\/+$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +33,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Don't auto-redirect on login check failure
-      if (!error.config.url.includes('/auth/me') && !error.config.url.includes('/auth/login')) {
+      const reqUrl = error.config?.url || '';
+      if (!reqUrl.includes('/auth/me') && !reqUrl.includes('/auth/login')) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }

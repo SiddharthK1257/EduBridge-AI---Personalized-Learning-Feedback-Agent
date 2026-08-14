@@ -4,11 +4,16 @@ const { isDuplicateQuestion } = require('../utils/duplicateChecker');
 // Load API Key directly from process.env.GEMINI_API_KEY
 const getApiKey = () => process.env.GEMINI_API_KEY || '';
 
-// Priority model list - Using latest Gemini Flash models for sub-3-second responses
+// Priority model list - Using Gemini 3.5 Flash Lite & 3.1 Flash for ultra-fast sub-2-second responses
 const GEMINI_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-2.0-flash-lite'
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-3.6-flash',
+  'gemini-flash-latest',
+  'gemini-3-flash-preview',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash'
 ];
 
 /**
@@ -429,18 +434,31 @@ const generatePerformanceFeedback = async (data) => {
  * Safely parse JSON Object from raw LLM output
  */
 const cleanJsonResponseObj = (rawText) => {
+  if (!rawText || typeof rawText !== 'string') return null;
   let cleaned = rawText.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(json)?\n?/, '').replace(/\n?```$/, '').trim();
   }
   try {
-    return JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return { questions: parsed };
+    return parsed;
   } catch (err) {
     const startObj = cleaned.indexOf('{');
     const endObj = cleaned.lastIndexOf('}');
     if (startObj !== -1 && endObj > startObj) {
       try {
         return JSON.parse(cleaned.substring(startObj, endObj + 1));
+      } catch (e) {}
+    }
+    const startArr = cleaned.indexOf('[');
+    const endArr = cleaned.lastIndexOf(']');
+    if (startArr !== -1 && endArr > startArr) {
+      try {
+        const arr = JSON.parse(cleaned.substring(startArr, endArr + 1));
+        if (Array.isArray(arr)) {
+          return { questions: arr };
+        }
       } catch (e) {}
     }
   }
@@ -742,37 +760,413 @@ Return ONLY valid JSON matching this exact structure (NO extra text, NO markdown
 };
 
 /**
- * Interactive AI Mentor Chat
+ * Interactive AI Academic Mentor chat for diagnostic test analysis & guidance
  */
-const chatWithTestMentor = async ({ question, attemptData }) => {
+const chatWithTestMentor = async ({
+  question,
+  attemptData = {},
+  studentHistory = {}
+}) => {
   const apiKey = getApiKey();
-
   const prompt = `
-You are EduBridge AI Mentor.
-Student Question: "${question}"
-Attempt accuracy: ${attemptData?.accuracy || 0}% in ${attemptData?.mockTest?.subject?.name || 'Subject'}.
-Answer in concise encouraging Markdown.
+You are EduBridge AI Academic Mentor, an encouraging, rigorous, and evidence-based AI exam tutor.
+A student is asking you a question about their diagnostic test result, weak areas, or study guidance.
+
+STUDENT & ATTEMPT CONTEXT:
+- Attempt Subject: ${attemptData.subject || 'General'}
+- Score/Accuracy: ${attemptData.accuracy !== undefined ? attemptData.accuracy + '%' : 'N/A'} (Score: ${attemptData.score || 'N/A'})
+- Weak Topics: ${Array.isArray(attemptData.weaknesses) ? attemptData.weaknesses.join(', ') : (studentHistory.weakTopics?.map(w => w.topicName || w).join(', ') || 'Core Concepts')}
+- Overall Accuracy: ${studentHistory.overallAccuracy || 0}%
+- Student Question: "${question}"
+
+GUIDELINES:
+1. Provide a clear, actionable, and encouraging 2-4 paragraph response.
+2. Directly answer their question, explaining the conceptual reasoning or recommending targeted practice steps (such as taking a Drill Test or focusing on foundational definitions).
+3. Do not invent false exam policies; focus on pedagogical clarity.
 `;
 
-  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
-    return `Based on your test attempt (${attemptData?.accuracy}% accuracy): Review the step-by-step explanations for wrong answers!`;
+  if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { temperature: 0.7 }
+        });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        if (text && text.trim()) return text.trim();
+      } catch (err) {}
+    }
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  for (const modelName of GEMINI_MODELS) {
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (err) {}
+  return `Based on your performance in ${attemptData.subject || 'this subject'}, focusing on strengthening your core understanding of weak topics is recommended. Try taking a targeted Drill Test to test individual concepts with instant step-by-step explanations.`;
+};
+
+/**
+ * Generate targeted Drill Test questions specifically focused on weak topics (Scorecard / Marksheet feedback)
+ */
+const generateDrillTestQuestions = async ({
+  subjectName = 'Mathematics',
+  weakTopics = [],
+  score = null,
+  totalMarks = 100,
+  percentage = null,
+  feedback = '',
+  incorrectQuestions = [],
+  difficulty = 'Adaptive',
+  previousDrillPerformance = null,
+  questionCount = 5,
+  exam = 'JEE Main',
+  grade = 'Class 12'
+}) => {
+  const apiKey = getApiKey();
+  
+  // Format weak topics list
+  const formattedWeakTopics = (Array.isArray(weakTopics) && weakTopics.length > 0)
+    ? weakTopics.filter(t => t && typeof t === 'string' && t.trim().length > 0)
+    : [subjectName + ' Core Principles'];
+    
+  const weakTopicsListStr = formattedWeakTopics.join(', ');
+  
+  // Determine adaptive difficulty
+  let effectiveDifficulty = difficulty;
+  if (difficulty === 'Adaptive' || !difficulty) {
+    if (previousDrillPerformance) {
+      if (previousDrillPerformance.accuracy < 50) {
+        effectiveDifficulty = 'Easy';
+      } else if (previousDrillPerformance.accuracy < 80) {
+        effectiveDifficulty = 'Medium';
+      } else {
+        effectiveDifficulty = 'Hard';
+      }
+    } else if (percentage !== null && percentage !== undefined) {
+      if (percentage < 45) {
+        effectiveDifficulty = 'Easy';
+      } else if (percentage < 75) {
+        effectiveDifficulty = 'Medium';
+      } else {
+        effectiveDifficulty = 'Hard';
+      }
+    } else {
+      effectiveDifficulty = 'Medium';
+    }
   }
 
-  return `Your test accuracy was ${attemptData?.accuracy}%. Please check the mistake analysis section for step-by-step guidance!`;
+  const prompt = `
+You are EduBridge AI, an expert exam tutor specializing in Precision Adaptive Drill Tests.
+Generate EXACTLY ${questionCount} high-yield, targeted practice questions in a SINGLE JSON object.
+
+Student Context:
+- Subject: ${subjectName}
+- Identified Weak Topic(s): ${weakTopicsListStr}
+- Previous Score/Percentage: ${percentage !== null ? percentage + '%' : (score ? score + '/' + totalMarks : 'Needs Improvement')}
+- Existing Feedback: ${feedback ? feedback.slice(0, 300) : 'Needs targeted drill practice on core concepts'}
+- Target Difficulty Level: ${effectiveDifficulty}
+- Exam Target: ${exam} (${grade})
+${previousDrillPerformance ? `- Previous Drill Result: ${previousDrillPerformance.accuracy}% accuracy. Adjust difficulty accordingly.` : ''}
+${incorrectQuestions && incorrectQuestions.length > 0 ? `- Missed Concepts Context: ${incorrectQuestions.slice(0, 3).map(q => q.questionText || q).join('; ')}` : ''}
+
+Rules:
+1. Every question MUST focus strictly on diagnosing and mastering the identified weak topics: [${weakTopicsListStr}]. Do NOT generate general unrelated questions.
+2. Distribute questions evenly across the weak topics.
+3. Include 4 distinct, plausible options (A, B, C, D) for each question.
+4. Provide a step-by-step conceptual explanation explaining why the correct option is right and how to avoid the common misconception.
+5. Provide a short guiding hint for each question.
+
+Return ONLY valid JSON matching this exact structure:
+{
+  "title": "🎯 Drill Test: ${formattedWeakTopics.slice(0, 2).join(' & ')} Mastery",
+  "subject": "${subjectName}",
+  "targetTopics": ${JSON.stringify(formattedWeakTopics)},
+  "difficulty": "${effectiveDifficulty}",
+  "questions": [
+    {
+      "question": "Question statement string",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Exact string matching one of the 4 options above",
+      "explanation": "Clear step-by-step reasoning explaining the concept and formula",
+      "topic": "${formattedWeakTopics[0] || subjectName}",
+      "bloomLevel": "Application",
+      "hint": "Short guiding tip"
+    }
+  ]
+}
+`;
+
+  let acceptedDrillQuestions = [];
+  let drillMetadata = {
+    title: `🎯 Drill Test: ${formattedWeakTopics.slice(0, 2).join(' & ')} Focus`,
+    subject: subjectName,
+    targetTopics: formattedWeakTopics,
+    difficulty: effectiveDifficulty
+  };
+
+  if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const startTime = Date.now();
+        console.log(`[Gemini Drill Engine]: Generating ${questionCount} drill questions with '${modelName}'...`);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.6,
+            responseMimeType: 'application/json'
+          }
+        });
+
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        const parsed = cleanJsonResponseObj(responseText);
+
+        if (parsed) {
+          if (parsed.title) drillMetadata.title = parsed.title;
+          if (parsed.difficulty) drillMetadata.difficulty = parsed.difficulty;
+          if (Array.isArray(parsed.targetTopics)) drillMetadata.targetTopics = parsed.targetTopics;
+
+          const rawList = Array.isArray(parsed.questions) ? parsed.questions : (Array.isArray(parsed) ? parsed : []);
+          for (let i = 0; i < rawList.length; i++) {
+            const q = rawList[i];
+            const qText = q.question || q.questionText;
+            if (!qText || !Array.isArray(q.options) || q.options.length < 4) continue;
+
+            const opts = q.options.slice(0, 4);
+            const matchIdx = opts.indexOf(q.correctAnswer);
+            const cIdx = matchIdx >= 0 ? matchIdx : (typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : 0);
+            const cText = opts[cIdx] || q.correctAnswer || opts[0];
+
+            acceptedDrillQuestions.push({
+              id: acceptedDrillQuestions.length + 1,
+              question: qText,
+              questionText: qText,
+              options: opts,
+              correctAnswer: cText,
+              correctOptionIndex: cIdx,
+              explanation: q.explanation || 'Step-by-step concept resolution.',
+              topic: q.topic || formattedWeakTopics[i % formattedWeakTopics.length] || subjectName,
+              bloomLevel: q.bloomLevel || (i % 2 === 0 ? 'Application' : 'Understanding'),
+              hint: q.hint || 'Carefully review the governing formula.',
+              difficulty: effectiveDifficulty,
+              subject: subjectName
+            });
+
+            if (acceptedDrillQuestions.length >= questionCount) break;
+          }
+
+          if (acceptedDrillQuestions.length > 0) {
+            console.log(`[Gemini Drill Engine]: Successfully generated ${acceptedDrillQuestions.length}/${questionCount} drill questions in ${Date.now() - startTime}ms.`);
+            break;
+          }
+        }
+      } catch (err) {
+        console.warn(`[Gemini Drill Engine]: Model '${modelName}' failed (${err.message}). Trying fallback...`);
+      }
+    }
+  }
+
+  // Fallback generation if API fails or is unreachable
+  if (acceptedDrillQuestions.length < questionCount) {
+    const missing = questionCount - acceptedDrillQuestions.length;
+    for (let i = 0; i < missing; i++) {
+      const topicForQ = formattedWeakTopics[i % formattedWeakTopics.length] || subjectName;
+      const idx = acceptedDrillQuestions.length + 1;
+      acceptedDrillQuestions.push({
+        id: idx,
+        question: `In ${subjectName} (${topicForQ}), what is the primary condition required to solve for unknown variables under standard analytical conditions?`,
+        questionText: `In ${subjectName} (${topicForQ}), what is the primary condition required to solve for unknown variables under standard analytical conditions?`,
+        options: [
+          `Apply fundamental conservation equations and isolate independent boundary states.`,
+          `Assume parameter values scale without verifying initial constraints.`,
+          `Disregard equilibrium criteria when external factors fluctuate.`,
+          `Set dependent derivatives to infinity regardless of domain continuity.`
+        ],
+        correctAnswer: `Apply fundamental conservation equations and isolate independent boundary states.`,
+        correctOptionIndex: 0,
+        explanation: `For ${topicForQ}, applying fundamental governing principles and evaluating independent boundary conditions ensures exact analytical results.`,
+        topic: topicForQ,
+        bloomLevel: 'Application',
+        hint: `Focus on the conservation law or standard governing formula for ${topicForQ}.`,
+        difficulty: effectiveDifficulty,
+        subject: subjectName
+      });
+    }
+  }
+
+  return {
+    ...drillMetadata,
+    questions: acceptedDrillQuestions.slice(0, questionCount)
+  };
+};
+
+/**
+ * Evaluate Drill Test submission and compute intelligent adaptive recommendations
+ */
+const evaluateDrillTestResult = async ({
+  drillTest,
+  userAnswers = [],
+  previousPerformance = null
+}) => {
+  const apiKey = getApiKey();
+  const questions = drillTest.questions || [];
+  const totalQuestions = questions.length;
+  
+  let correctCount = 0;
+  let wrongCount = 0;
+  let skippedCount = 0;
+  
+  const questionResults = [];
+  const topicStats = {};
+
+  questions.forEach((q, idx) => {
+    const topic = q.topic || drillTest.subject || 'Core Concept';
+    if (!topicStats[topic]) {
+      topicStats[topic] = { total: 0, correct: 0, wrong: 0, skipped: 0 };
+    }
+    topicStats[topic].total += 1;
+
+    const userAns = userAnswers.find(a => a.questionIndex === idx || a.questionId === q.id || a.id === q.id);
+    const selectedIdx = userAns ? userAns.selectedOptionIndex : -1;
+    const isCorrect = selectedIdx === q.correctOptionIndex;
+    const isSkipped = selectedIdx === -1 || selectedIdx === null || selectedIdx === undefined;
+
+    if (isSkipped) {
+      skippedCount += 1;
+      topicStats[topic].skipped += 1;
+    } else if (isCorrect) {
+      correctCount += 1;
+      topicStats[topic].correct += 1;
+    } else {
+      wrongCount += 1;
+      topicStats[topic].wrong += 1;
+    }
+
+    questionResults.push({
+      questionIndex: idx,
+      questionText: q.questionText || q.question,
+      options: q.options,
+      selectedOptionIndex: selectedIdx,
+      correctOptionIndex: q.correctOptionIndex,
+      correctAnswer: q.correctAnswer,
+      isCorrect,
+      isSkipped,
+      explanation: q.explanation,
+      topic,
+      bloomLevel: q.bloomLevel,
+      hint: q.hint
+    });
+  });
+
+  const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+  
+  // Topic-wise performance map
+  const topicPerformance = Object.keys(topicStats).map(topicName => {
+    const stat = topicStats[topicName];
+    const topAccuracy = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+    return {
+      topicName,
+      total: stat.total,
+      correct: stat.correct,
+      wrong: stat.wrong,
+      accuracy: topAccuracy,
+      masteryStatus: topAccuracy >= 80 ? 'Mastered' : (topAccuracy >= 50 ? 'Improving' : 'Needs Focus')
+    };
+  });
+
+  // Adaptive difficulty logic
+  let nextDifficulty = 'Medium';
+  let nextDrillRecommended = true;
+  let adaptiveFeedbackSummary = '';
+
+  if (accuracy >= 80) {
+    nextDifficulty = 'Hard';
+    nextDrillRecommended = accuracy < 100;
+    adaptiveFeedbackSummary = `Outstanding work! You demonstrated ${accuracy}% accuracy across your targeted weak topics. You are ready for advanced application-level challenges.`;
+  } else if (accuracy >= 50) {
+    nextDifficulty = 'Medium';
+    nextDrillRecommended = true;
+    adaptiveFeedbackSummary = `Good progress (${accuracy}% accuracy). You understand the core concepts but need more practice with multi-step problem solving.`;
+  } else {
+    nextDifficulty = 'Easy';
+    nextDrillRecommended = true;
+    adaptiveFeedbackSummary = `Your accuracy was ${accuracy}%. A follow-up drill focusing on step-by-step fundamental definitions and basic formulas is recommended.`;
+  }
+
+  // Generate dynamic AI feedback using Gemini if available
+  let aiFeedbackText = adaptiveFeedbackSummary;
+  let conceptsToRevise = [];
+
+  const prompt = `
+You are EduBridge AI Tutor evaluating a student's Drill Test result.
+- Subject: ${drillTest.subject}
+- Topics Drilled: ${(drillTest.targetTopics || []).join(', ')}
+- Score: ${correctCount}/${totalQuestions} (${accuracy}% Accuracy)
+- Topic Breakdown: ${JSON.stringify(topicPerformance)}
+- Previous Drill Accuracy: ${previousPerformance ? previousPerformance.accuracy + '%' : 'First Drill'}
+
+Provide concise structured JSON:
+{
+  "feedback": "2-3 sentences of encouraging, targeted feedback analyzing student precision and understanding",
+  "conceptsToRevise": ["Specific concept/formula 1 to review", "Specific concept/formula 2 to review"],
+  "strengthsDemonstrated": ["Concept student solved accurately"],
+  "adaptiveRecommendation": "Explanation of recommended next drill difficulty level"
+}
+`;
+
+  if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.5,
+            responseMimeType: 'application/json'
+          }
+        });
+
+        const result = await model.generateContent(prompt);
+        const parsed = cleanJsonResponseObj(result.response.text());
+        if (parsed) {
+          if (parsed.feedback) aiFeedbackText = parsed.feedback;
+          if (Array.isArray(parsed.conceptsToRevise)) conceptsToRevise = parsed.conceptsToRevise;
+          break;
+        }
+      } catch (err) {}
+    }
+  }
+
+  if (conceptsToRevise.length === 0) {
+    const weakTopicsFromTest = topicPerformance.filter(t => t.accuracy < 70).map(t => t.topicName);
+    conceptsToRevise = weakTopicsFromTest.length > 0 
+      ? weakTopicsFromTest.map(t => `Review core theorem and practice 3 standard numericals in ${t}`)
+      : [`Review boundary conditions and speed optimization in ${drillTest.subject}`];
+  }
+
+  return {
+    score: correctCount,
+    totalMarks: totalQuestions,
+    totalQuestions,
+    accuracy,
+    correctCount,
+    wrongCount,
+    skippedCount,
+    topicPerformance,
+    feedback: aiFeedbackText,
+    conceptsToRevise,
+    nextDrillRecommended,
+    nextRecommendedDifficulty: nextDifficulty,
+    questionResults,
+    subject: drillTest.subject,
+    drilledTopics: drillTest.targetTopics || []
+  };
 };
 
 module.exports = {
   generateQuestions,
   generatePerformanceFeedback,
   chatWithTestMentor,
-  generateStudyPlan
+  generateStudyPlan,
+  generateDrillTestQuestions,
+  evaluateDrillTestResult
 };

@@ -122,7 +122,7 @@ const StudyPlanner = () => {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#0b0f19'
+        backgroundColor: '#ffffff'
       });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -154,7 +154,7 @@ const StudyPlanner = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner label="Loading your personalized AI study roadmap & wellness schedule..." />
@@ -167,7 +167,7 @@ const StudyPlanner = () => {
   const healthTips = studyPlan?.healthTips || studyPlan?.healthyRoutine || {};
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 selection:bg-indigo-500">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-emerald-500">
       <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
@@ -176,39 +176,39 @@ const StudyPlanner = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden space-y-8">
           
           {/* Header */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-widest mb-1">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Gemini 2.5 Flash • AI Study Roadmap & Healthy Life Balance Coach</span>
+            <div className="flex items-center space-x-2 text-emerald-700 font-extrabold text-xs uppercase tracking-widest mb-1">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Gemini AI Tutor • Study Roadmap & Healthy Life Balance Coach</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Personalized <span className="gradient-text">AI Study Roadmap & Healthy Life Balance</span>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Personalized <span className="gradient-text-emerald">AI Study Roadmap & Healthy Life Balance</span>
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              EduBridge AI uses <strong className="text-indigo-300">Gemini 2.5 Flash</strong> to analyze your mock test results and craft a hyper-personalized study roadmap integrated with sleep, breaks, hydration, and exercise for maximum score growth without burnout.
+            <p className="text-slate-600 text-sm mt-1 font-medium">
+              EduBridge AI uses <strong className="text-emerald-700 font-extrabold">Gemini AI Engine</strong> to analyze your scorecard and mock test results, crafting a hyper-personalized study roadmap integrated with sleep, breaks, hydration, and exercise.
             </p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between font-medium">
               <span>{error}</span>
               <button onClick={() => setError('')} className="text-xs font-bold underline">Dismiss</button>
             </div>
           )}
 
           {/* Generator Input Form */}
-          <form onSubmit={handleGeneratePlan} className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6">
-            <h3 className="text-lg font-bold text-white flex items-center">
-              <CalendarCheck className="w-5 h-5 mr-2 text-indigo-400" />
+          <form onSubmit={handleGeneratePlan} className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-6">
+            <h3 className="text-lg font-black text-slate-900 flex items-center">
+              <CalendarCheck className="w-5 h-5 mr-2 text-emerald-600" />
               1. Configure Roadmap Parameters
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Target Subject(s)
                 </label>
                 <input
@@ -217,12 +217,12 @@ const StudyPlanner = () => {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="e.g. Physics, Chemistry, Mathematics"
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Key Topics / Chapters (Comma separated)
                 </label>
                 <input
@@ -231,7 +231,7 @@ const StudyPlanner = () => {
                   value={topics}
                   onChange={(e) => setTopics(e.target.value)}
                   placeholder="e.g. Electrostatics, Calculus, Organic Mechanisms"
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 />
               </div>
 
@@ -240,7 +240,7 @@ const StudyPlanner = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Target Exam Date
                 </label>
                 <input
@@ -248,12 +248,12 @@ const StudyPlanner = () => {
                   required
                   value={examDate}
                   onChange={(e) => setExamDate(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Available Hours / Day
                 </label>
                 <input
@@ -263,12 +263,12 @@ const StudyPlanner = () => {
                   required
                   value={availableHoursPerDay}
                   onChange={(e) => setAvailableHoursPerDay(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Target Score Goal (%)
                 </label>
                 <input
@@ -278,14 +278,14 @@ const StudyPlanner = () => {
                   required
                   value={targetScore}
                   onChange={(e) => setTargetScore(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
                 />
               </div>
 
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                 Weak Areas & Focus Topics (Optional)
               </label>
               <input
@@ -293,38 +293,38 @@ const StudyPlanner = () => {
                 value={weakAreas}
                 onChange={(e) => setWeakAreas(e.target.value)}
                 placeholder="e.g. Integration by parts, Optic lens formulas"
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 text-slate-900 text-sm font-semibold focus:border-emerald-500 focus:outline-none shadow-soft-sm"
               />
             </div>
 
             <button
               type="submit"
               disabled={generating}
-              className="w-full py-4 px-6 rounded-2xl text-base font-extrabold text-white gradient-bg shadow-glow-indigo hover:opacity-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full py-4 px-6 rounded-2xl text-base font-extrabold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-violet-600 shadow-glow-emerald hover:opacity-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               {generating ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin text-white" />
-                  <span>Gemini 2.0 Flash is generating your personalized roadmap...</span>
+                  <span>Gemini AI is generating your personalized roadmap...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 text-amber-300" />
                   <span>Generate / Update AI Study Roadmap</span>
                 </>
               )}
             </button>
 
             {generating && (
-              <div className="p-6 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-center space-y-3 animate-pulse">
-                <div className="flex items-center justify-center space-x-2 text-indigo-400 font-bold text-sm">
-                  <Loader2 className="w-5 h-5 animate-spin" />
+              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-3 shadow-soft-sm animate-pulse">
+                <div className="flex items-center justify-center space-x-2 text-emerald-800 font-black text-sm">
+                  <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
                   <span>Analyzing syllabus, calculating days remaining & structuring schedule...</span>
                 </div>
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full w-4/5 animate-pulse" />
+                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-600 h-full w-4/5 animate-pulse rounded-full" />
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 font-medium">
                   Target response time: &lt; 3 seconds using Gemini Flash.
                 </p>
               </div>
@@ -337,23 +337,23 @@ const StudyPlanner = () => {
               
               {/* Header Action Bar */}
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <Target className="w-5 h-5 mr-2 text-indigo-400" /> Active AI Study Roadmap
+                <h2 className="text-xl font-black text-slate-900 flex items-center">
+                  <Target className="w-5 h-5 mr-2 text-emerald-600" /> Active AI Study Roadmap
                 </h2>
                 <button
                   type="button"
                   onClick={handleDownloadPDF}
                   disabled={exportingPDF}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600/30 text-xs font-bold flex items-center space-x-2 transition-all disabled:opacity-50 shadow-glow-indigo"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-black flex items-center space-x-2 transition-all disabled:opacity-50 shadow-soft-sm"
                 >
                   {exportingPDF ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                       <span>Generating PDF...</span>
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4 text-indigo-400" />
+                      <Download className="w-4 h-4 text-emerald-600" />
                       <span>Download PDF Roadmap</span>
                     </>
                   )}
@@ -366,41 +366,41 @@ const StudyPlanner = () => {
                 {/* Section 1: Overview Summary Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   
-                  <div className="glass-card p-5 rounded-2xl border border-indigo-500/30 bg-indigo-950/20">
-                    <span className="text-xs font-semibold text-indigo-400 block uppercase">Days Remaining</span>
-                    <p className="text-2xl font-black text-white mt-1">{overview.daysRemaining || 30} Days</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Count-down to target exam</p>
+                  <div className="stat-card-teal p-5 rounded-2xl">
+                    <span className="text-xs font-bold text-teal-800 block uppercase">Days Remaining</span>
+                    <p className="text-2xl font-black text-slate-900 mt-1">{overview.daysRemaining || 30} Days</p>
+                    <p className="text-[11px] text-slate-600 mt-1 font-medium">Count-down to target exam</p>
                   </div>
 
-                  <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20">
-                    <span className="text-xs font-semibold text-emerald-400 block uppercase">Target Score</span>
-                    <p className="text-2xl font-black text-white mt-1">{overview.targetScore || studyPlan.targetScore || 90}%</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Goal accuracy benchmark</p>
+                  <div className="stat-card-emerald p-5 rounded-2xl">
+                    <span className="text-xs font-bold text-emerald-800 block uppercase">Target Score</span>
+                    <p className="text-2xl font-black text-slate-900 mt-1">{overview.targetScore || studyPlan.targetScore || 90}%</p>
+                    <p className="text-[11px] text-slate-600 mt-1 font-medium">Goal accuracy benchmark</p>
                   </div>
 
-                  <div className="glass-card p-5 rounded-2xl border border-purple-500/30 bg-purple-950/20">
-                    <span className="text-xs font-semibold text-purple-400 block uppercase">Daily Hours</span>
-                    <p className="text-2xl font-black text-white mt-1">{overview.dailyStudyHours || studyPlan.availableHoursPerDay || 5} hrs/day</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Scheduled study time</p>
+                  <div className="stat-card-violet p-5 rounded-2xl">
+                    <span className="text-xs font-bold text-violet-800 block uppercase">Daily Hours</span>
+                    <p className="text-2xl font-black text-slate-900 mt-1">{overview.dailyStudyHours || studyPlan.availableHoursPerDay || 5} hrs/day</p>
+                    <p className="text-[11px] text-slate-600 mt-1 font-medium">Scheduled study time</p>
                   </div>
 
-                  <div className="glass-card p-5 rounded-2xl border border-amber-500/30 bg-amber-950/20">
-                    <span className="text-xs font-semibold text-amber-400 block uppercase">Exam Target</span>
-                    <p className="text-xl font-black text-white mt-1 truncate">{overview.examTarget || 'Target Exam'}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Primary goal</p>
+                  <div className="stat-card-amber p-5 rounded-2xl">
+                    <span className="text-xs font-bold text-amber-800 block uppercase">Exam Target</span>
+                    <p className="text-xl font-black text-slate-900 mt-1 truncate">{overview.examTarget || 'Target Exam'}</p>
+                    <p className="text-[11px] text-slate-600 mt-1 font-medium">Primary goal</p>
                   </div>
 
                 </div>
 
                 {/* Section 2: Daily Schedule Checklist */}
-                <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800">
+                <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-lg font-bold text-white flex items-center">
-                        <Clock className="w-5 h-5 mr-2 text-indigo-400" />
+                      <h3 className="text-lg font-black text-slate-900 flex items-center">
+                        <Clock className="w-5 h-5 mr-2 text-emerald-600" />
                         Daily Study Schedule Checklist
                       </h3>
-                      <p className="text-xs text-slate-400">Click tasks to mark them complete in MongoDB</p>
+                      <p className="text-xs text-slate-600 font-medium">Click tasks to mark them complete in MongoDB</p>
                     </div>
                   </div>
 
@@ -411,22 +411,22 @@ const StudyPlanner = () => {
                         onClick={() => task._id && handleToggleTask(task._id)}
                         className={`p-4 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                           task.completed
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                            : 'bg-slate-900/60 border-slate-800 text-slate-200 hover:border-slate-700'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950 shadow-soft-sm'
+                            : 'bg-slate-50 border-slate-200 text-slate-800 hover:border-emerald-300 hover:bg-emerald-50/20'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
                           {task.completed ? (
-                            <CheckSquare className="w-5 h-5 text-emerald-400 shrink-0" />
+                            <CheckSquare className="w-5 h-5 text-emerald-600 shrink-0" />
                           ) : (
-                            <Square className="w-5 h-5 text-slate-600 shrink-0" />
+                            <Square className="w-5 h-5 text-slate-400 shrink-0" />
                           )}
                           <div>
-                            <p className={`text-sm font-semibold ${task.completed ? 'line-through opacity-70' : ''}`}>
+                            <p className={`text-sm font-bold ${task.completed ? 'line-through opacity-70 text-slate-500' : 'text-slate-900'}`}>
                               {task.activity}
                             </p>
-                            <p className="text-xs text-slate-400">
-                              <span className="text-indigo-400 font-medium">{task.timeSlot}</span> • {task.topicOrChapter}
+                            <p className="text-xs text-slate-600 font-medium">
+                              <span className="text-emerald-700 font-bold">{task.timeSlot}</span> • {task.topicOrChapter}
                             </p>
                           </div>
                         </div>
@@ -437,27 +437,27 @@ const StudyPlanner = () => {
 
                 {/* Section 3: Topic Priority & Difficulty Matrix */}
                 {studyPlan.priorityTopics && studyPlan.priorityTopics.length > 0 && (
-                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800">
+                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
                     <div className="flex items-center space-x-2 mb-6">
-                      <Flame className="w-5 h-5 text-amber-400" />
-                      <h3 className="text-lg font-bold text-white">Topic Priority & Difficulty Matrix</h3>
+                      <Flame className="w-5 h-5 text-amber-500" />
+                      <h3 className="text-lg font-black text-slate-900">Topic Priority & Difficulty Matrix</h3>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {studyPlan.priorityTopics.map((item, idx) => (
-                        <div key={idx} className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2">
+                        <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                              item.priority === 'High' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                              item.priority === 'High' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-amber-50 text-amber-800 border-amber-200'
                             }`}>
                               {item.priority || 'High'} Priority
                             </span>
-                            <span className="text-xs text-indigo-400 font-bold">{item.estimatedHours || 10} hrs</span>
+                            <span className="text-xs text-emerald-700 font-black">{item.estimatedHours || 10} hrs</span>
                           </div>
-                          <h4 className="font-bold text-sm text-white">{item.topicName}</h4>
-                          <div className="flex items-center justify-between text-xs text-slate-400">
+                          <h4 className="font-bold text-sm text-slate-900">{item.topicName}</h4>
+                          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
                             <span>Subject: {item.subject || studyPlan.subject}</span>
-                            <span className="text-slate-300 font-medium">Diff: {item.difficulty || 'Medium'}</span>
+                            <span className="text-slate-800 font-semibold">Diff: {item.difficulty || 'Medium'}</span>
                           </div>
                         </div>
                       ))}
@@ -467,21 +467,21 @@ const StudyPlanner = () => {
 
                 {/* Section 4: Weekly Roadmap & Timeline */}
                 {studyPlan.weeklyPlan && studyPlan.weeklyPlan.length > 0 && (
-                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800">
+                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-soft-sm">
                     <div className="flex items-center space-x-2 mb-6">
-                      <TrendingUp className="w-5 h-5 text-purple-400" />
-                      <h3 className="text-lg font-bold text-white">Weekly Progression Roadmap</h3>
+                      <TrendingUp className="w-5 h-5 text-violet-600" />
+                      <h3 className="text-lg font-black text-slate-900">Weekly Progression Roadmap</h3>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {studyPlan.weeklyPlan.map((weekItem, idx) => (
-                        <div key={idx} className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2">
+                        <div key={idx} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-extrabold text-purple-400 uppercase">{weekItem.week || `Week ${idx + 1}`}</span>
-                            <span className="text-xs text-slate-400 font-semibold">{weekItem.targetHours || 35} hrs target</span>
+                            <span className="text-xs font-black text-violet-800 uppercase">{weekItem.week || `Week ${idx + 1}`}</span>
+                            <span className="text-xs text-slate-600 font-bold">{weekItem.targetHours || 35} hrs target</span>
                           </div>
-                          <h4 className="font-bold text-sm text-white">{weekItem.focusArea}</h4>
-                          <p className="text-xs text-slate-400">{weekItem.taskCount || 14} scheduled learning modules</p>
+                          <h4 className="font-bold text-sm text-slate-900">{weekItem.focusArea}</h4>
+                          <p className="text-xs text-slate-600 font-medium">{weekItem.taskCount || 14} scheduled learning modules</p>
                         </div>
                       ))}
                     </div>
@@ -493,18 +493,18 @@ const StudyPlanner = () => {
                   
                   {/* Revision Schedule */}
                   {studyPlan.revisionPlan && studyPlan.revisionPlan.length > 0 && (
-                    <div className="glass-card p-6 rounded-3xl border border-slate-800 space-y-4">
-                      <h3 className="text-base font-bold text-white flex items-center">
-                        <FileCheck className="w-5 h-5 mr-2 text-sky-400" />
+                    <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+                      <h3 className="text-base font-black text-slate-900 flex items-center">
+                        <FileCheck className="w-5 h-5 mr-2 text-sky-600" />
                         Structured Revision Schedule
                       </h3>
                       <div className="space-y-3">
                         {studyPlan.revisionPlan.map((rev, idx) => (
-                          <div key={idx} className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-                            <span className="font-bold text-sky-400 block">{rev.day}</span>
-                            <p className="text-slate-200 font-semibold">{rev.focus}</p>
+                          <div key={idx} className="p-4 rounded-2xl bg-sky-50 border border-sky-200 text-xs space-y-1">
+                            <span className="font-black text-sky-800 block">{rev.day}</span>
+                            <p className="text-slate-900 font-bold">{rev.focus}</p>
                             {rev.topics && rev.topics.length > 0 && (
-                              <p className="text-slate-400">Topics: {rev.topics.join(', ')}</p>
+                              <p className="text-slate-600 font-medium">Topics: {rev.topics.join(', ')}</p>
                             )}
                           </div>
                         ))}
@@ -514,19 +514,19 @@ const StudyPlanner = () => {
 
                   {/* Mock Test Schedule */}
                   {studyPlan.mockTests && studyPlan.mockTests.length > 0 && (
-                    <div className="glass-card p-6 rounded-3xl border border-slate-800 space-y-4">
-                      <h3 className="text-base font-bold text-white flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-amber-400" />
+                    <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-4">
+                      <h3 className="text-base font-black text-slate-900 flex items-center">
+                        <Award className="w-5 h-5 mr-2 text-amber-500" />
                         Mock Test & Assessment Timeline
                       </h3>
                       <div className="space-y-3">
                         {studyPlan.mockTests.map((mock, idx) => (
-                          <div key={idx} className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
+                          <div key={idx} className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-1">
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-amber-400">{mock.testName}</span>
-                              <span className="text-slate-400 font-semibold">{mock.date}</span>
+                              <span className="font-black text-amber-900">{mock.testName}</span>
+                              <span className="text-slate-600 font-bold">{mock.date}</span>
                             </div>
-                            <p className="text-slate-300">Focus: {mock.focus}</p>
+                            <p className="text-slate-800 font-medium">Focus: {mock.focus}</p>
                           </div>
                         ))}
                       </div>
@@ -537,16 +537,16 @@ const StudyPlanner = () => {
 
                 {/* Section 6: Last 7 Days Pre-Exam Sprint */}
                 {studyPlan.last7DaysPlan && studyPlan.last7DaysPlan.length > 0 && (
-                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/20 bg-rose-950/10">
-                    <h3 className="text-base font-bold text-rose-300 flex items-center mb-4">
-                      <Zap className="w-5 h-5 mr-2 text-rose-400" />
+                  <div className="glass-card p-6 sm:p-8 rounded-3xl border border-rose-200 bg-rose-50/50 shadow-soft-sm">
+                    <h3 className="text-base font-black text-rose-900 flex items-center mb-4">
+                      <Zap className="w-5 h-5 mr-2 text-rose-600" />
                       Final 7-Day Pre-Exam Revision Strategy
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {studyPlan.last7DaysPlan.map((sprint, idx) => (
-                        <div key={idx} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs space-y-1">
-                          <span className="font-bold text-rose-400 block">{sprint.day}</span>
-                          <p className="text-slate-200">{sprint.task}</p>
+                        <div key={idx} className="p-4 rounded-2xl bg-white border border-rose-200 text-xs space-y-1 shadow-soft-sm">
+                          <span className="font-black text-rose-800 block">{sprint.day}</span>
+                          <p className="text-slate-800 font-semibold">{sprint.task}</p>
                         </div>
                       ))}
                     </div>
@@ -554,56 +554,56 @@ const StudyPlanner = () => {
                 )}
 
                 {/* Section 7: Healthy Routine & Wellness Planner */}
-                <div className="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 shadow-glow-emerald">
-                  <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-800">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <div className="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-200 bg-white shadow-soft-sm">
+                  <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-200">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-glow-emerald">
                       <Heart className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-extrabold text-white">Healthy Lifestyle & Wellness Routine</h3>
-                      <p className="text-xs text-emerald-300">Maintain maximum retention with balanced rest and mental health</p>
+                      <h3 className="text-xl font-black text-slate-900">Healthy Lifestyle & Wellness Routine</h3>
+                      <p className="text-xs text-emerald-800 font-medium">Maintain maximum retention with balanced rest and mental health</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     
-                    <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3">
-                      <Moon className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+                      <Moon className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Sleep Recommendation</span>
-                        <p className="text-sm font-semibold text-white">{healthTips.sleepRecommendation || healthTips.sleepTime || '7-8 hours daily (10:30 PM to 06:00 AM)'}</p>
+                        <span className="text-xs font-extrabold text-slate-600 block uppercase">Sleep Recommendation</span>
+                        <p className="text-sm font-bold text-slate-900">{healthTips.sleepRecommendation || healthTips.sleepTime || '7-8 hours daily (10:30 PM to 06:00 AM)'}</p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3">
-                      <Activity className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+                      <Activity className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Exercise & Workout</span>
-                        <p className="text-sm font-semibold text-white">{healthTips.exerciseRecommendation || healthTips.exerciseTime || '20-30 mins light morning workout'}</p>
+                        <span className="text-xs font-extrabold text-slate-600 block uppercase">Exercise & Workout</span>
+                        <p className="text-sm font-bold text-slate-900">{healthTips.exerciseRecommendation || healthTips.exerciseTime || '20-30 mins light morning workout'}</p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3">
-                      <Droplet className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+                      <Droplet className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Water Hydration</span>
-                        <p className="text-sm font-semibold text-white">{healthTips.waterReminder || '250ml water every 2 hours'}</p>
+                        <span className="text-xs font-extrabold text-slate-600 block uppercase">Water Hydration</span>
+                        <p className="text-sm font-bold text-slate-900">{healthTips.waterReminder || '250ml water every 2 hours'}</p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3">
-                      <Brain className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+                      <Brain className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Mindfulness & Meditation</span>
-                        <p className="text-sm font-semibold text-white">{healthTips.meditationTime || '10 mins post-study relaxation'}</p>
+                        <span className="text-xs font-extrabold text-slate-600 block uppercase">Mindfulness & Meditation</span>
+                        <p className="text-sm font-bold text-slate-900">{healthTips.meditationTime || '10 mins post-study relaxation'}</p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start space-x-3">
-                      <Eye className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-3">
+                      <Eye className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Screen Break Timings</span>
-                        <p className="text-sm font-semibold text-white">{healthTips.breakTimings || healthTips.screenBreakInterval || '5 min break every 45 mins'}</p>
+                        <span className="text-xs font-extrabold text-slate-600 block uppercase">Screen Break Timings</span>
+                        <p className="text-sm font-bold text-slate-900">{healthTips.breakTimings || healthTips.screenBreakInterval || '5 min break every 45 mins'}</p>
                       </div>
                     </div>
 
@@ -614,12 +614,12 @@ const StudyPlanner = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {studyPlan.examTips && studyPlan.examTips.length > 0 && (
-                    <div className="glass-card p-6 rounded-3xl border border-slate-800 space-y-3">
-                      <h3 className="text-base font-bold text-white flex items-center">
-                        <ShieldCheck className="w-5 h-5 mr-2 text-indigo-400" />
+                    <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-3">
+                      <h3 className="text-base font-black text-slate-900 flex items-center">
+                        <ShieldCheck className="w-5 h-5 mr-2 text-emerald-600" />
                         AI Exam Strategy Tips
                       </h3>
-                      <ul className="space-y-2 text-xs text-slate-300 list-disc list-inside">
+                      <ul className="space-y-2 text-xs text-slate-700 list-disc list-inside font-medium">
                         {studyPlan.examTips.map((tip, idx) => (
                           <li key={idx}>{tip}</li>
                         ))}
@@ -628,12 +628,12 @@ const StudyPlanner = () => {
                   )}
 
                   {studyPlan.motivation && studyPlan.motivation.length > 0 && (
-                    <div className="glass-card p-6 rounded-3xl border border-slate-800 space-y-3">
-                      <h3 className="text-base font-bold text-white flex items-center">
-                        <Sparkles className="w-5 h-5 mr-2 text-amber-400" />
+                    <div className="glass-card p-6 rounded-3xl border border-slate-200 bg-white shadow-soft-sm space-y-3">
+                      <h3 className="text-base font-black text-slate-900 flex items-center">
+                        <Sparkles className="w-5 h-5 mr-2 text-amber-500" />
                         Daily Motivation & Mindset
                       </h3>
-                      <ul className="space-y-2 text-xs text-slate-300 list-disc list-inside">
+                      <ul className="space-y-2 text-xs text-slate-700 list-disc list-inside font-medium">
                         {studyPlan.motivation.map((mot, idx) => (
                           <li key={idx}>{mot}</li>
                         ))}
@@ -646,21 +646,21 @@ const StudyPlanner = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-16 px-6 glass-card rounded-3xl border border-indigo-500/30 bg-gradient-to-b from-indigo-950/20 to-slate-950/40 text-slate-300 space-y-5">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400 shadow-glow-indigo">
+            <div className="text-center py-16 px-6 glass-card rounded-3xl border border-emerald-200 bg-gradient-to-b from-emerald-50/50 to-white text-slate-800 space-y-5 shadow-soft-sm">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-700 shadow-glow-emerald">
                 <Target className="w-8 h-8" />
               </div>
               <div className="max-w-md mx-auto space-y-2">
-                <h3 className="text-xl font-extrabold text-white">No Mock Test Attempted Yet</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  EduBridge AI generates your personalized study roadmap & healthy life balance routine <strong className="text-indigo-300">directly from your mock test performance</strong>. Complete a mock test, and our Gemini 2.5 Flash engine will automatically construct your tailored plan!
+                <h3 className="text-xl font-black text-slate-900">No Mock Test Attempted Yet</h3>
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                  EduBridge AI generates your personalized study roadmap & healthy life balance routine <strong className="text-emerald-800 font-bold">directly from your mock test performance</strong>. Complete a mock test, and our Gemini AI engine will automatically construct your tailored plan!
                 </p>
               </div>
               <a
-                href="/test-generator"
-                className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-sm font-extrabold text-white gradient-bg shadow-glow-indigo hover:opacity-95 transition-all"
+                href="/generate-test"
+                className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-glow-emerald hover:opacity-95 transition-all"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-amber-300" />
                 <span>Take a Mock Test Now</span>
               </a>
             </div>
